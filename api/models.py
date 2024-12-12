@@ -18,7 +18,7 @@ class Estudiante(models.Model):
         return self.nombre
 
 class Profesor(models.Model):
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(null=False, max_length=100)
     especialidad = models.CharField(max_length=100)
     clases_impartidas = models.ManyToManyField(Clase, related_name="profesores")
 

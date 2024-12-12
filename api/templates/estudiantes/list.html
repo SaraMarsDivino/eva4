@@ -4,10 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscripción de Estudiantes</title>
+    <style>
+        .error-message { color: red; }
+        .success-message { color: green; }
+    </style>
     <script>
-        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
+        const token = "REEMPLAZA_TU_TOKEN"; // Reemplaza con tu token
         const endpointEstudiantes = "http://127.0.0.1:8000/api/estudiantes/";
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
+
+        // Mostrar mensaje de éxito o error
+        function mostrarMensaje(tipo, mensaje) {
+            const mensajeDiv = document.getElementById("mensaje");
+            mensajeDiv.className = tipo === "success" ? "success-message" : "error-message";
+            mensajeDiv.textContent = mensaje;
+            setTimeout(() => mensajeDiv.textContent = "", 3000);
+        }
 
         // Cargar estudiantes
         function cargarEstudiantes() {
@@ -32,7 +44,7 @@
                     listaEstudiantes.appendChild(item);
                 });
             })
-            .catch(error => console.error("Error al cargar los estudiantes:", error));
+            .catch(() => mostrarMensaje("error", "Error al cargar los estudiantes."));
         }
 
         // Mostrar formulario para inscribir
@@ -59,13 +71,18 @@
                     selectClases.appendChild(option);
                 });
             })
-            .catch(error => console.error("Error al cargar las clases:", error));
+            .catch(() => mostrarMensaje("error", "Error al cargar las clases."));
         }
 
         // Inscribir estudiante en clase
         function inscribirEnClase() {
             const estudianteId = document.getElementById("estudiante-id").value;
             const claseId = document.getElementById("clase-id").value;
+
+            if (!claseId) {
+                mostrarMensaje("error", "Selecciona una clase antes de inscribir.");
+                return;
+            }
 
             fetch(`${endpointEstudiantes}${estudianteId}/`, {
                 method: "PUT",
@@ -76,11 +93,11 @@
                 body: JSON.stringify({ clases_inscritas: [claseId] })
             })
             .then(() => {
-                alert("Estudiante inscrito con éxito");
+                mostrarMensaje("success", "Estudiante inscrito con éxito.");
                 document.getElementById("form-inscripcion").style.display = "none";
                 cargarEstudiantes();
             })
-            .catch(error => console.error("Error al inscribir en clase:", error));
+            .catch(() => mostrarMensaje("error", "Error al inscribir en clase."));
         }
 
         // Cargar estudiantes al iniciar
@@ -89,9 +106,9 @@
 </head>
 <body>
     <h1>Inscripción de Estudiantes</h1>
+    <div id="mensaje"></div>
 
     <!-- Lista de Estudiantes -->
-     <h1>lista de estudiantes</h1>
     <ul id="lista-estudiantes">
         <!-- Los estudiantes se cargarán aquí dinámicamente -->
     </ul>

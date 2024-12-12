@@ -8,7 +8,6 @@
         const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
         const endpoint = "http://127.0.0.1:8000/api/clases/";
 
-        // Cargar clases
         function cargarClases() {
             fetch(endpoint, {
                 method: "GET",
@@ -17,25 +16,26 @@
                     "Content-Type": "application/json"
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error("Error en el servidor");
+                return response.json();
+            })
             .then(data => {
                 const listaClases = document.getElementById("lista-clases");
-                listaClases.innerHTML = ""; // Limpiar lista
-
+                listaClases.innerHTML = "";
                 data.forEach(clase => {
                     const item = document.createElement("li");
                     item.innerHTML = `
                         ${clase.nombre} - ${clase.horario} - ${clase.descripcion}
-                        <button onclick="editarClase(${clase.id}, '${clase.nombre}', '${clase.horario}', '${clase.descripcion}')">Editar</button>
+                        <button onclick="editarClase(${clase.id})">Editar</button>
                         <button onclick="eliminarClase(${clase.id})">Eliminar</button>
                     `;
                     listaClases.appendChild(item);
                 });
             })
-            .catch(error => console.error("Error al cargar las clases:", error));
+            .catch(error => alert("Error al cargar las clases: " + error.message));
         }
 
-        // Crear clase
         function crearClase() {
             const nombre = document.getElementById("nombre").value;
             const horario = document.getElementById("horario").value;
@@ -49,43 +49,37 @@
                 },
                 body: JSON.stringify({ nombre, horario, descripcion })
             })
-            .then(() => {
+            .then(response => {
+                if (!response.ok) throw new Error("Error al crear la clase");
                 cargarClases();
                 document.getElementById("form-clase").reset();
             })
-            .catch(error => console.error("Error al crear la clase:", error));
+            .catch(error => alert("Error: " + error.message));
         }
 
-        // Editar clase
-        function editarClase(id, nombre, horario, descripcion) {
-            document.getElementById("nombre").value = nombre;
-            document.getElementById("horario").value = horario;
-            document.getElementById("descripcion").value = descripcion;
+        function editarClase(id) {
+            const nombre = prompt("Nuevo Nombre:");
+            const horario = prompt("Nuevo Horario:");
+            const descripcion = prompt("Nueva Descripción:");
 
-            document.getElementById("btn-guardar").onclick = function () {
-                fetch(`${endpoint}${id}/`, {
-                    method: "PUT",
-                    headers: {
-                        "Authorization": `Token ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        nombre: document.getElementById("nombre").value,
-                        horario: document.getElementById("horario").value,
-                        descripcion: document.getElementById("descripcion").value
-                    })
-                })
-                .then(() => {
-                    cargarClases();
-                    document.getElementById("form-clase").reset();
-                    document.getElementById("btn-guardar").onclick = crearClase;
-                })
-                .catch(error => console.error("Error al editar la clase:", error));
-            };
+            fetch(`${endpoint}${id}/`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ nombre, horario, descripcion })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Error al editar la clase");
+                cargarClases();
+            })
+            .catch(error => alert("Error: " + error.message));
         }
 
-        // Eliminar clase
         function eliminarClase(id) {
+            if (!confirm("¿Estás seguro de eliminar esta clase?")) return;
+
             fetch(`${endpoint}${id}/`, {
                 method: "DELETE",
                 headers: {
@@ -93,29 +87,24 @@
                     "Content-Type": "application/json"
                 }
             })
-            .then(() => cargarClases())
-            .catch(error => console.error("Error al eliminar la clase:", error));
+            .then(response => {
+                if (!response.ok) throw new Error("Error al eliminar la clase");
+                cargarClases();
+            })
+            .catch(error => alert("Error: " + error.message));
         }
 
-        // Cargar clases al iniciar
         document.addEventListener("DOMContentLoaded", cargarClases);
     </script>
 </head>
 <body>
     <h1>CRUD de Clases</h1>
-
-    <!-- Formulario -->
     <form id="form-clase" onsubmit="event.preventDefault(); crearClase();">
         <input type="text" id="nombre" placeholder="Nombre" required>
-        <input type="time" id="horario" placeholder="Horario" required>
+        <input type="time" id="horario" required>
         <input type="text" id="descripcion" placeholder="Descripción" required>
-        <button type="submit" id="btn-guardar">Guardar</button>
+        <button type="submit">Guardar</button>
     </form>
-
-    <!-- Lista de Clases -->
-     <h1>Lista de clases</h1>
-    <ul id="lista-clases">
-        <!-- Las clases se cargarán aquí dinámicamente -->
-    </ul>
+    <ul id="lista-clases"></ul>
 </body>
 </html>

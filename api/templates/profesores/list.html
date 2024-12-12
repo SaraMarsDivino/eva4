@@ -6,11 +6,12 @@
     <title>CRUD de Profesores</title>
     <script>
         const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
-        const endpoint = "http://127.0.0.1:8000/api/profesores/";
+        const endpointProfesores = "http://127.0.0.1:8000/api/profesores/";
+        const endpointClases = "http://127.0.0.1:8000/api/clases/";
 
         // Cargar profesores
         function cargarProfesores() {
-            fetch(endpoint, {
+            fetch(endpointProfesores, {
                 method: "GET",
                 headers: {
                     "Authorization": `Token ${token}`,
@@ -23,10 +24,11 @@
                 listaProfesores.innerHTML = ""; // Limpiar lista
 
                 data.forEach(profesor => {
+                    const clases = profesor.clases_impartidas.map(clase => clase.nombre).join(", ") || "Ninguna";
                     const item = document.createElement("li");
                     item.innerHTML = `
-                        ${profesor.nombre} - ${profesor.especialidad}
-                        <button onclick="editarProfesor(${profesor.id}, '${profesor.nombre}', '${profesor.especialidad}')">Editar</button>
+                        ${profesor.nombre} - ${profesor.especialidad} (Clases: ${clases})
+                        <button onclick="editarProfesor(${profesor.id}, '${profesor.nombre}', '${profesor.especialidad}', [${profesor.clases_impartidas.map(clase => clase.id)}])">Editar</button>
                         <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
                     `;
                     listaProfesores.appendChild(item);
@@ -35,18 +37,43 @@
             .catch(error => console.error("Error al cargar los profesores:", error));
         }
 
+        // Cargar clases en el selector
+        function cargarClases() {
+            fetch(endpointClases, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const selectClases = document.getElementById("clases-impartidas");
+                selectClases.innerHTML = ""; // Limpiar opciones
+
+                data.forEach(clase => {
+                    const option = document.createElement("option");
+                    option.value = clase.id;
+                    option.textContent = `${clase.nombre} - ${clase.horario}`;
+                    selectClases.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error al cargar las clases:", error));
+        }
+
         // Crear profesor
         function crearProfesor() {
             const nombre = document.getElementById("nombre").value;
             const especialidad = document.getElementById("especialidad").value;
+            const clasesImpartidas = Array.from(document.getElementById("clases-impartidas").selectedOptions).map(option => parseInt(option.value));
 
-            fetch(endpoint, {
+            fetch(endpointProfesores, {
                 method: "POST",
                 headers: {
                     "Authorization": `Token ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ nombre, especialidad })
+                body: JSON.stringify({ nombre, especialidad, clases_impartidas: clasesImpartidas })
             })
             .then(() => {
                 cargarProfesores();
@@ -56,12 +83,19 @@
         }
 
         // Editar profesor
-        function editarProfesor(id, nombre, especialidad) {
+        function editarProfesor(id, nombre, especialidad, clasesImpartidas) {
             document.getElementById("nombre").value = nombre;
             document.getElementById("especialidad").value = especialidad;
 
+            const selectClases = document.getElementById("clases-impartidas");
+            Array.from(selectClases.options).forEach(option => {
+                option.selected = clasesImpartidas.includes(parseInt(option.value));
+            });
+
             document.getElementById("btn-guardar").onclick = function () {
-                fetch(`${endpoint}${id}/`, {
+                const nuevasClasesImpartidas = Array.from(selectClases.selectedOptions).map(option => parseInt(option.value));
+
+                fetch(`${endpointProfesores}${id}/`, {
                     method: "PUT",
                     headers: {
                         "Authorization": `Token ${token}`,
@@ -69,7 +103,8 @@
                     },
                     body: JSON.stringify({
                         nombre: document.getElementById("nombre").value,
-                        especialidad: document.getElementById("especialidad").value
+                        especialidad: document.getElementById("especialidad").value,
+                        clases_impartidas: nuevasClasesImpartidas
                     })
                 })
                 .then(() => {
@@ -83,7 +118,7 @@
 
         // Eliminar profesor
         function eliminarProfesor(id) {
-            fetch(`${endpoint}${id}/`, {
+            fetch(`${endpointProfesores}${id}/`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Token ${token}`,
@@ -94,8 +129,11 @@
             .catch(error => console.error("Error al eliminar el profesor:", error));
         }
 
-        // Cargar profesores al iniciar
-        document.addEventListener("DOMContentLoaded", cargarProfesores);
+        // Cargar profesores y clases al iniciar
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarProfesores();
+            cargarClases();
+        });
     </script>
 </head>
 <body>
@@ -105,11 +143,14 @@
     <form id="form-profesor" onsubmit="event.preventDefault(); crearProfesor();">
         <input type="text" id="nombre" placeholder="Nombre" required>
         <input type="text" id="especialidad" placeholder="Especialidad" required>
+        <select id="clases-impartidas" multiple>
+            <!-- Las clases se cargarán aquí dinámicamente -->
+        </select>
         <button type="submit" id="btn-guardar">Guardar</button>
     </form>
 
     <!-- Lista de Profesores -->
-     <h1>Lista DE Profesores</h1>
+    <h2>Lista de Profesores</h2>
     <ul id="lista-profesores">
         <!-- Los profesores se cargarán aquí dinámicamente -->
     </ul>
