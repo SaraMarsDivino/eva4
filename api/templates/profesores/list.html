@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Profesores</title>
+    <script>
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
+        const endpoint = "http://127.0.0.1:8000/api/profesores/";
+
+        // Cargar profesores
+        function cargarProfesores() {
+            fetch(endpoint, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const listaProfesores = document.getElementById("lista-profesores");
+                listaProfesores.innerHTML = ""; // Limpiar lista
+
+                data.forEach(profesor => {
+                    const item = document.createElement("li");
+                    item.innerHTML = `
+                        ${profesor.nombre} - ${profesor.especialidad}
+                        <button onclick="editarProfesor(${profesor.id}, '${profesor.nombre}', '${profesor.especialidad}')">Editar</button>
+                        <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
+                    `;
+                    listaProfesores.appendChild(item);
+                });
+            })
+            .catch(error => console.error("Error al cargar los profesores:", error));
+        }
+
+        // Crear profesor
+        function crearProfesor() {
+            const nombre = document.getElementById("nombre").value;
+            const especialidad = document.getElementById("especialidad").value;
+
+            fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ nombre, especialidad })
+            })
+            .then(() => {
+                cargarProfesores();
+                document.getElementById("form-profesor").reset();
+            })
+            .catch(error => console.error("Error al crear el profesor:", error));
+        }
+
+        // Editar profesor
+        function editarProfesor(id, nombre, especialidad) {
+            document.getElementById("nombre").value = nombre;
+            document.getElementById("especialidad").value = especialidad;
+
+            document.getElementById("btn-guardar").onclick = function () {
+                fetch(`${endpoint}${id}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Token ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre: document.getElementById("nombre").value,
+                        especialidad: document.getElementById("especialidad").value
+                    })
+                })
+                .then(() => {
+                    cargarProfesores();
+                    document.getElementById("form-profesor").reset();
+                    document.getElementById("btn-guardar").onclick = crearProfesor;
+                })
+                .catch(error => console.error("Error al editar el profesor:", error));
+            };
+        }
+
+        // Eliminar profesor
+        function eliminarProfesor(id) {
+            fetch(`${endpoint}${id}/`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(() => cargarProfesores())
+            .catch(error => console.error("Error al eliminar el profesor:", error));
+        }
+
+        // Cargar profesores al iniciar
+        document.addEventListener("DOMContentLoaded", cargarProfesores);
+    </script>
+</head>
+<body>
+    <h1>CRUD de Profesores</h1>
+
+    <!-- Formulario -->
+    <form id="form-profesor" onsubmit="event.preventDefault(); crearProfesor();">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="text" id="especialidad" placeholder="Especialidad" required>
+        <button type="submit" id="btn-guardar">Guardar</button>
+    </form>
+
+    <!-- Lista de Profesores -->
+     <h1>Lista DE Profesores</h1>
+    <ul id="lista-profesores">
+        <!-- Los profesores se cargarán aquí dinámicamente -->
+    </ul>
+</body>
+</html>

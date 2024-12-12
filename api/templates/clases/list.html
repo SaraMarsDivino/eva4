@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUD de Clases</title>
+    <script>
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
+        const endpoint = "http://127.0.0.1:8000/api/clases/";
+
+        // Cargar clases
+        function cargarClases() {
+            fetch(endpoint, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const listaClases = document.getElementById("lista-clases");
+                listaClases.innerHTML = ""; // Limpiar lista
+
+                data.forEach(clase => {
+                    const item = document.createElement("li");
+                    item.innerHTML = `
+                        ${clase.nombre} - ${clase.horario} - ${clase.descripcion}
+                        <button onclick="editarClase(${clase.id}, '${clase.nombre}', '${clase.horario}', '${clase.descripcion}')">Editar</button>
+                        <button onclick="eliminarClase(${clase.id})">Eliminar</button>
+                    `;
+                    listaClases.appendChild(item);
+                });
+            })
+            .catch(error => console.error("Error al cargar las clases:", error));
+        }
+
+        // Crear clase
+        function crearClase() {
+            const nombre = document.getElementById("nombre").value;
+            const horario = document.getElementById("horario").value;
+            const descripcion = document.getElementById("descripcion").value;
+
+            fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ nombre, horario, descripcion })
+            })
+            .then(() => {
+                cargarClases();
+                document.getElementById("form-clase").reset();
+            })
+            .catch(error => console.error("Error al crear la clase:", error));
+        }
+
+        // Editar clase
+        function editarClase(id, nombre, horario, descripcion) {
+            document.getElementById("nombre").value = nombre;
+            document.getElementById("horario").value = horario;
+            document.getElementById("descripcion").value = descripcion;
+
+            document.getElementById("btn-guardar").onclick = function () {
+                fetch(`${endpoint}${id}/`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Token ${token}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        nombre: document.getElementById("nombre").value,
+                        horario: document.getElementById("horario").value,
+                        descripcion: document.getElementById("descripcion").value
+                    })
+                })
+                .then(() => {
+                    cargarClases();
+                    document.getElementById("form-clase").reset();
+                    document.getElementById("btn-guardar").onclick = crearClase;
+                })
+                .catch(error => console.error("Error al editar la clase:", error));
+            };
+        }
+
+        // Eliminar clase
+        function eliminarClase(id) {
+            fetch(`${endpoint}${id}/`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(() => cargarClases())
+            .catch(error => console.error("Error al eliminar la clase:", error));
+        }
+
+        // Cargar clases al iniciar
+        document.addEventListener("DOMContentLoaded", cargarClases);
+    </script>
+</head>
+<body>
+    <h1>CRUD de Clases</h1>
+
+    <!-- Formulario -->
+    <form id="form-clase" onsubmit="event.preventDefault(); crearClase();">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="time" id="horario" placeholder="Horario" required>
+        <input type="text" id="descripcion" placeholder="Descripción" required>
+        <button type="submit" id="btn-guardar">Guardar</button>
+    </form>
+
+    <!-- Lista de Clases -->
+     <h1>Lista de clases</h1>
+    <ul id="lista-clases">
+        <!-- Las clases se cargarán aquí dinámicamente -->
+    </ul>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripción de Estudiantes</title>
+    <script>
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
+        const endpointEstudiantes = "http://127.0.0.1:8000/api/estudiantes/";
+        const endpointClases = "http://127.0.0.1:8000/api/clases/";
+
+        // Cargar estudiantes
+        function cargarEstudiantes() {
+            fetch(endpointEstudiantes, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const listaEstudiantes = document.getElementById("lista-estudiantes");
+                listaEstudiantes.innerHTML = ""; // Limpiar lista
+
+                data.forEach(estudiante => {
+                    const item = document.createElement("li");
+                    item.innerHTML = `
+                        ${estudiante.nombre} - ${estudiante.correo}
+                        <button onclick="mostrarInscribir(${estudiante.id})">Inscribir en Clase</button>
+                    `;
+                    listaEstudiantes.appendChild(item);
+                });
+            })
+            .catch(error => console.error("Error al cargar los estudiantes:", error));
+        }
+
+        // Mostrar formulario para inscribir
+        function mostrarInscribir(estudianteId) {
+            document.getElementById("form-inscripcion").style.display = "block";
+            document.getElementById("estudiante-id").value = estudianteId;
+
+            fetch(endpointClases, {
+                method: "GET",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const selectClases = document.getElementById("clase-id");
+                selectClases.innerHTML = ""; // Limpiar opciones
+
+                data.forEach(clase => {
+                    const option = document.createElement("option");
+                    option.value = clase.id;
+                    option.textContent = `${clase.nombre} - ${clase.horario}`;
+                    selectClases.appendChild(option);
+                });
+            })
+            .catch(error => console.error("Error al cargar las clases:", error));
+        }
+
+        // Inscribir estudiante en clase
+        function inscribirEnClase() {
+            const estudianteId = document.getElementById("estudiante-id").value;
+            const claseId = document.getElementById("clase-id").value;
+
+            fetch(`${endpointEstudiantes}${estudianteId}/`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ clases_inscritas: [claseId] })
+            })
+            .then(() => {
+                alert("Estudiante inscrito con éxito");
+                document.getElementById("form-inscripcion").style.display = "none";
+                cargarEstudiantes();
+            })
+            .catch(error => console.error("Error al inscribir en clase:", error));
+        }
+
+        // Cargar estudiantes al iniciar
+        document.addEventListener("DOMContentLoaded", cargarEstudiantes);
+    </script>
+</head>
+<body>
+    <h1>Inscripción de Estudiantes</h1>
+
+    <!-- Lista de Estudiantes -->
+     <h1>lista de estudiantes</h1>
+    <ul id="lista-estudiantes">
+        <!-- Los estudiantes se cargarán aquí dinámicamente -->
+    </ul>
+
+    <!-- Formulario de Inscripción -->
+    <div id="form-inscripcion" style="display:none;">
+        <h2>Inscribir Estudiante en Clase</h2>
+        <select id="clase-id"></select>
+        <input type="hidden" id="estudiante-id">
+        <button onclick="inscribirEnClase()">Inscribir</button>
+    </div>
+</body>
+</html>
