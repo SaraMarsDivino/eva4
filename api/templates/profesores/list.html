@@ -63,9 +63,14 @@
 
         // Crear profesor
         function crearProfesor() {
-            const nombre = document.getElementById("nombre").value;
-            const especialidad = document.getElementById("especialidad").value;
+            const nombre = document.getElementById("nombre").value.trim();
+            const especialidad = document.getElementById("especialidad").value.trim();
             const clasesImpartidas = Array.from(document.getElementById("clases-impartidas").selectedOptions).map(option => parseInt(option.value));
+
+            if (!nombre || !especialidad) {
+                alert("Por favor, completa todos los campos.");
+                return;
+            }
 
             fetch(endpointProfesores, {
                 method: "POST",
@@ -75,11 +80,17 @@
                 },
                 body: JSON.stringify({ nombre, especialidad, clases_impartidas: clasesImpartidas })
             })
-            .then(() => {
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => {
+                        console.error("Error al crear el profesor:", error);
+                        throw new Error("Error al crear el profesor.");
+                    });
+                }
                 cargarProfesores();
                 document.getElementById("form-profesor").reset();
             })
-            .catch(error => console.error("Error al crear el profesor:", error));
+            .catch(error => alert("Error al crear el profesor: " + error.message));
         }
 
         // Editar profesor
@@ -102,22 +113,32 @@
                         "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
-                        nombre: document.getElementById("nombre").value,
-                        especialidad: document.getElementById("especialidad").value,
+                        nombre: document.getElementById("nombre").value.trim(),
+                        especialidad: document.getElementById("especialidad").value.trim(),
                         clases_impartidas: nuevasClasesImpartidas
                     })
                 })
-                .then(() => {
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(error => {
+                            console.error("Error al editar el profesor:", error);
+                            throw new Error("Error al editar el profesor.");
+                        });
+                    }
                     cargarProfesores();
                     document.getElementById("form-profesor").reset();
                     document.getElementById("btn-guardar").onclick = crearProfesor;
                 })
-                .catch(error => console.error("Error al editar el profesor:", error));
+                .catch(error => alert("Error al editar el profesor: " + error.message));
             };
         }
 
         // Eliminar profesor
         function eliminarProfesor(id) {
+            if (!confirm("¿Estás seguro de que deseas eliminar este profesor?")) {
+                return;
+            }
+
             fetch(`${endpointProfesores}${id}/`, {
                 method: "DELETE",
                 headers: {
@@ -126,7 +147,7 @@
                 }
             })
             .then(() => cargarProfesores())
-            .catch(error => console.error("Error al eliminar el profesor:", error));
+            .catch(error => alert("Error al eliminar el profesor: " + error.message));
         }
 
         // Cargar profesores y clases al iniciar

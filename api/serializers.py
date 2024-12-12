@@ -12,6 +12,9 @@ class EstudianteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProfesorSerializer(serializers.ModelSerializer):
+    clases_impartidas = ClaseSerializer(many=True, read_only=True)
+
     class Meta:
         model = Profesor
         fields = '__all__'
+    
