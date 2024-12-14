@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User
 
+# Modelo Clase
 class Clase(models.Model):
     nombre = models.CharField(max_length=100)
     horario = models.TimeField()
@@ -9,18 +9,22 @@ class Clase(models.Model):
     def __str__(self):
         return self.nombre
 
+
+# Modelo Estudiante
 class Estudiante(models.Model):
     nombre = models.CharField(max_length=100)
-    correo = models.EmailField(unique=True)
-    clases_inscritas = models.ManyToManyField(Clase, related_name="estudiantes")
+    correo = models.EmailField()
+    clases_inscritas = models.ManyToManyField(Clase, related_name="estudiantes", blank=True)
 
     def __str__(self):
         return self.nombre
 
+
+# Modelo Profesor
 class Profesor(models.Model):
-    nombre = models.CharField(null=False, max_length=100)
+    nombre = models.CharField(max_length=100)
     especialidad = models.CharField(max_length=100)
-    clases_impartidas = models.ManyToManyField(Clase, related_name="profesores")
+    clases_impartidas = models.ManyToManyField(Clase, related_name="profesores", blank=True)
 
     def __str__(self):
         return self.nombre
