@@ -30,10 +30,9 @@ urlpatterns = [
     path('api/', include('api.urls')),
 
     # Login y Logout
-    path('', auth_views.LoginView.as_view(template_name="login.html"), name="login"),
+    path('', auth_views.LoginView.as_view(template_name='login/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name="logout"),
 
-    # Menú principal (protegido con login_required)
     path('menu/', login_required(TemplateView.as_view(template_name="menu.html")), name="menu"),
 
     # Vistas específicas de cada funcionalidad

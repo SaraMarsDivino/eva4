@@ -11,6 +11,7 @@ from django.shortcuts import render
 
 
 # CRUD para Clases
+@login_required
 class ClaseViewSet(viewsets.ModelViewSet):
     queryset = Clase.objects.all()
     serializer_class = ClaseSerializer
@@ -18,6 +19,7 @@ class ClaseViewSet(viewsets.ModelViewSet):
 
 
 # CRUD para Estudiantes
+@login_required
 class EstudianteViewSet(viewsets.ModelViewSet):
     queryset = Estudiante.objects.all()
     serializer_class = EstudianteSerializer
@@ -40,6 +42,7 @@ class EstudianteViewSet(viewsets.ModelViewSet):
 
 
 # CRUD para Profesores
+@login_required
 class ProfesorViewSet(viewsets.ModelViewSet):
     queryset = Profesor.objects.all()
     serializer_class = ProfesorSerializer
@@ -62,6 +65,7 @@ class ProfesorViewSet(viewsets.ModelViewSet):
 
 
 # Búsquedas personalizadas: Clases por profesor o horario
+@login_required
 class BuscarClasesView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -86,4 +90,7 @@ class BuscarClasesView(APIView):
 
 @login_required
 def menu_principal(request):
-    return render(request, 'menu.html')  # Usará una plantilla llamada "menu.html"
+    return render(request, 'menu.html')  
+
+def login(request):
+    return render(render, 'login.html' )

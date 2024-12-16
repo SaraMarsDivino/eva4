@@ -15,14 +15,13 @@ urlpatterns = [
     # Rutas para el CRUD generado por DRF
     path('', include(router.urls)),
 
-    # Rutas de autenticación y menú principal
-    path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    # Rutas de autenticación
+    path('login/', auth_views.LoginView.as_view(template_name='login/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('menu/', menu_principal, name='menu'),
 
-    # Ruta para búsqueda personalizada
+    # Ruta de búsqueda personalizada
     path('clases/buscar/', BuscarClasesView.as_view(), name='buscar_clases'),
-
-    # Ruta de obtención de token
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
 ]
+
