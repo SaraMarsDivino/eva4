@@ -98,7 +98,7 @@
     </script>
 </head>
 <body>
-    <h1>CRUD de Clases</h1>
+    <h1>Clases</h1>
     <form id="form-clase" onsubmit="event.preventDefault(); crearClase();">
         <input type="text" id="nombre" placeholder="Nombre" required>
         <input type="time" id="horario" required>
@@ -107,4 +107,5 @@
     </form>
     <ul id="lista-clases"></ul>
 </body>
+<br><a href="{% url 'menu' %}">ATRAS</a>
 </html>

@@ -85,13 +85,13 @@ class BuscarClasesView(LoginRequiredMixin, APIView):
         return Response(serializer.data)
 
 
-# Vista del menú principal protegida por login_required
+
 @login_required
 def menu_principal(request):
     return render(request, 'menu.html')
 
 
-# Vista del login
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login as auth_login
 
