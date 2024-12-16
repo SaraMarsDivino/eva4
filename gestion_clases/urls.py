@@ -14,11 +14,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.contrib.auth import views as auth_views
 from django.contrib import admin
+
 from django.urls import path, include
+from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
+
 
 urlpatterns = [
-    path('admin/', admin.site.urls),  # Panel de administración
-    path('', include('api.urls')),    # Incluye las URLs de la app `api`
-]
+    # Admin Panel
+    path('admin/', admin.site.urls),
 
+    # API URLs
+    path('api/', include('api.urls')),
+
+    # Login y Logout
+    path('', auth_views.LoginView.as_view(template_name="login.html"), name="login"),
+    path('logout/', auth_views.LogoutView.as_view(), name="logout"),
+
+    # Menú principal (protegido con login_required)
+    path('menu/', login_required(TemplateView.as_view(template_name="menu.html")), name="menu"),
+
+    # Vistas específicas de cada funcionalidad
+    path('clases/', login_required(TemplateView.as_view(template_name="clases/list.html")), name="clases"),
+    path('estudiantes/', login_required(TemplateView.as_view(template_name="estudiantes/list.html")), name="estudiantes"),
+    path('profesores/', login_required(TemplateView.as_view(template_name="profesores/list.html")), name="profesores"),
+]
