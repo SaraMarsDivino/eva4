@@ -16,18 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
 
 urlpatterns = [
-    # Admin Panel
-    path('admin/', admin.site.urls),
-
-    # API URLs (incluyendo autenticación por token)
-    path('api/', include('api.urls')),  # Incluye las rutas de la app `api`
-
-    # Frontend Templates
-    path('clases/', TemplateView.as_view(template_name="clases/list.html"), name="clases-list"),
-    path('estudiantes/', TemplateView.as_view(template_name="estudiantes/list.html"), name="estudiantes-list    "),
-    path('profesores/', TemplateView.as_view(template_name="profesores/list.html"), name="profesores-list"),   
+    path('admin/', admin.site.urls),  # Panel de administración
+    path('', include('api.urls')),    # Incluye las URLs de la app `api`
 ]
 

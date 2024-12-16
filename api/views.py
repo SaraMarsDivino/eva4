@@ -1,3 +1,4 @@
+#views.yp
 from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -5,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from .models import Clase, Estudiante, Profesor
 from .serializers import ClaseSerializer, EstudianteSerializer, ProfesorSerializer
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
 
 # CRUD para Clases
@@ -80,3 +83,7 @@ class BuscarClasesView(APIView):
 
         serializer = ClaseSerializer(clases, many=True)
         return Response(serializer.data)
+
+@login_required
+def menu_principal(request):
+    return render(request, 'menu.html')  # Usará una plantilla llamada "menu.html"

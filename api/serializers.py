@@ -1,3 +1,4 @@
+#serializers.py api
 from rest_framework import serializers
 from .models import Clase, Estudiante, Profesor
 
@@ -19,7 +20,7 @@ class EstudianteSerializer(serializers.ModelSerializer):
 
 # Serializador para el modelo Profesor
 class ProfesorSerializer(serializers.ModelSerializer):
-    clases_impartidas = ClaseSerializer(many=True, read_only=True)  # Incluir clases impartidas en el serializador
+    clases_impartidas = serializers.PrimaryKeyRelatedField(queryset=Clase.objects.all(), many=True)  # Incluir clases impartidas en el serializador
 
     class Meta:
         model = Profesor
