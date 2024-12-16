@@ -5,72 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD de Profesores</title>
     <script>
-        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de";
         const endpointProfesores = "http://127.0.0.1:8000/api/profesores/";
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
 
-        // Cargar profesores
         function cargarProfesores() {
-            fetch(endpointProfesores, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
-            })
+            fetch(endpointProfesores, { headers: { "Authorization": `Token ${token}` } })
             .then(response => response.json())
             .then(data => {
-                const listaProfesores = document.getElementById("lista-profesores");
-                listaProfesores.innerHTML = ""; // Limpiar lista
-
+                const lista = document.getElementById("lista-profesores");
+                lista.innerHTML = "";
                 data.forEach(profesor => {
-                    const clases = profesor.clases_impartidas.map(clase => clase.nombre).join(", ") || "Ninguna";
-                    const item = document.createElement("li");
-                    item.innerHTML = `
-                        ${profesor.nombre} - ${profesor.especialidad} (Clases: ${clases})
-                        <button onclick="editarProfesor(${profesor.id}, '${profesor.nombre}', '${profesor.especialidad}', [${profesor.clases_impartidas.map(clase => clase.id)}])">Editar</button>
-                        <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
+                    const clases = profesor.clases_impartidas.length > 0 
+                        ? profesor.clases_impartidas.join(", ") 
+                        : "Ninguna";
+                    lista.innerHTML += `
+                        <li>
+                            ${profesor.nombre} - ${profesor.especialidad} (Clases: ${clases})
+                            <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
+                        </li>
                     `;
-                    listaProfesores.appendChild(item);
                 });
-            })
-            .catch(error => console.error("Error al cargar los profesores:", error));
+            });
         }
 
-        // Cargar clases en el selector
         function cargarClases() {
-            fetch(endpointClases, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
-            })
+            fetch(endpointClases, { headers: { "Authorization": `Token ${token}` } })
             .then(response => response.json())
             .then(data => {
-                const selectClases = document.getElementById("clases-impartidas");
-                selectClases.innerHTML = ""; // Limpiar opciones
-
+                const select = document.getElementById("clases-impartidas");
+                select.innerHTML = "";
                 data.forEach(clase => {
-                    const option = document.createElement("option");
-                    option.value = clase.id;
-                    option.textContent = `${clase.nombre} - ${clase.horario}`;
-                    selectClases.appendChild(option);
+                    select.innerHTML += `<option value="${clase.id}">${clase.nombre}</option>`;
                 });
-            })
-            .catch(error => console.error("Error al cargar las clases:", error));
+            });
         }
 
-        // Crear profesor
         function crearProfesor() {
-            const nombre = document.getElementById("nombre").value.trim();
-            const especialidad = document.getElementById("especialidad").value.trim();
-            const clasesImpartidas = Array.from(document.getElementById("clases-impartidas").selectedOptions).map(option => parseInt(option.value));
-
-            if (!nombre || !especialidad) {
-                alert("Por favor, completa todos los campos.");
-                return;
-            }
+            const nombre = document.getElementById("nombre").value;
+            const especialidad = document.getElementById("especialidad").value;
+            const clases = Array.from(document.getElementById("clases-impartidas").selectedOptions)
+                                .map(option => parseInt(option.value));
 
             fetch(endpointProfesores, {
                 method: "POST",
@@ -78,79 +53,20 @@
                     "Authorization": `Token ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ nombre, especialidad, clases_impartidas: clasesImpartidas })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(error => {
-                        console.error("Error al crear el profesor:", error);
-                        throw new Error("Error al crear el profesor.");
-                    });
-                }
+                body: JSON.stringify({ nombre, especialidad, clases_impartidas: clases })
+            }).then(() => {
                 cargarProfesores();
                 document.getElementById("form-profesor").reset();
-            })
-            .catch(error => alert("Error al crear el profesor: " + error.message));
-        }
-
-        // Editar profesor
-        function editarProfesor(id, nombre, especialidad, clasesImpartidas) {
-            document.getElementById("nombre").value = nombre;
-            document.getElementById("especialidad").value = especialidad;
-
-            const selectClases = document.getElementById("clases-impartidas");
-            Array.from(selectClases.options).forEach(option => {
-                option.selected = clasesImpartidas.includes(parseInt(option.value));
             });
-
-            document.getElementById("btn-guardar").onclick = function () {
-                const nuevasClasesImpartidas = Array.from(selectClases.selectedOptions).map(option => parseInt(option.value));
-
-                fetch(`${endpointProfesores}${id}/`, {
-                    method: "PUT",
-                    headers: {
-                        "Authorization": `Token ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        nombre: document.getElementById("nombre").value.trim(),
-                        especialidad: document.getElementById("especialidad").value.trim(),
-                        clases_impartidas: nuevasClasesImpartidas
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(error => {
-                            console.error("Error al editar el profesor:", error);
-                            throw new Error("Error al editar el profesor.");
-                        });
-                    }
-                    cargarProfesores();
-                    document.getElementById("form-profesor").reset();
-                    document.getElementById("btn-guardar").onclick = crearProfesor;
-                })
-                .catch(error => alert("Error al editar el profesor: " + error.message));
-            };
         }
 
-        // Eliminar profesor
         function eliminarProfesor(id) {
-            if (!confirm("¿Estás seguro de que deseas eliminar este profesor?")) {
-                return;
-            }
-
             fetch(`${endpointProfesores}${id}/`, {
                 method: "DELETE",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
-            })
-            .then(() => cargarProfesores())
-            .catch(error => alert("Error al eliminar el profesor: " + error.message));
+                headers: { "Authorization": `Token ${token}` }
+            }).then(() => cargarProfesores());
         }
 
-        // Cargar profesores y clases al iniciar
         document.addEventListener("DOMContentLoaded", () => {
             cargarProfesores();
             cargarClases();
@@ -160,21 +76,16 @@
 <body>
     <h1>CRUD de Profesores</h1>
 
-    <!-- Formulario -->
     <form id="form-profesor" onsubmit="event.preventDefault(); crearProfesor();">
         <input type="text" id="nombre" placeholder="Nombre" required>
         <input type="text" id="especialidad" placeholder="Especialidad" required>
-        <select id="clases-impartidas" multiple>
-            <!-- Las clases se cargarán aquí dinámicamente -->
-        </select>
-        <button type="submit" id="btn-guardar">Guardar</button>
+        <select id="clases-impartidas" multiple></select>
+        <button type="submit">Guardar</button>
     </form>
 
-   
     <h2>Lista de Profesores</h2>
-    <ul id="lista-profesores">
-        <!-- Los profesores se cargarán aquí dinámicamente -->
-    </ul>
+    <ul id="lista-profesores"></ul>
+
+    <a href="{% url 'menu' %}">ATRÁS</a>
 </body>
-<br><a href="{% url 'menu' %}">ATRAS</a>
 </html>

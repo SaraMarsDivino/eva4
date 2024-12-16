@@ -3,13 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inscripción de Estudiantes</title>
+    <title>Gestión de Estudiantes</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
         .error-message { color: red; }
         .success-message { color: green; }
+        h1, h2 { color: #333; }
+        button {
+            margin: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        input, select {
+            margin: 5px;
+            padding: 5px;
+        }
+        .form-container {
+            margin-top: 20px;
+        }
+        #lista-estudiantes {
+            list-style: none;
+            padding: 0;
+        }
+        #lista-estudiantes li {
+            margin: 10px 0;
+        }
     </style>
     <script>
-        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Reemplaza con tu token
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Token de autenticación
         const endpointEstudiantes = "http://127.0.0.1:8000/api/estudiantes/";
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
 
@@ -38,7 +62,7 @@
                 data.forEach(estudiante => {
                     const item = document.createElement("li");
                     item.innerHTML = `
-                        ${estudiante.nombre} - ${estudiante.correo}
+                        <strong>${estudiante.nombre}</strong> - ${estudiante.correo}
                         <button onclick="mostrarInscribir(${estudiante.id})">Inscribir en Clase</button>
                     `;
                     listaEstudiantes.appendChild(item);
@@ -47,7 +71,37 @@
             .catch(() => mostrarMensaje("error", "Error al cargar los estudiantes."));
         }
 
-        // Mostrar formulario para inscribir
+        // Crear un nuevo estudiante
+        function crearEstudiante() {
+            const nombre = document.getElementById("nuevo-nombre").value.trim();
+            const correo = document.getElementById("nuevo-correo").value.trim();
+
+            if (!nombre || !correo) {
+                mostrarMensaje("error", "Todos los campos son obligatorios.");
+                return;
+            }
+
+            fetch(endpointEstudiantes, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Token ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ nombre, correo })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("No se pudo crear el estudiante.");
+                return response.json();
+            })
+            .then(() => {
+                mostrarMensaje("success", "Estudiante creado con éxito.");
+                document.getElementById("form-crear-estudiante").reset();
+                cargarEstudiantes();
+            })
+            .catch(() => mostrarMensaje("error", "Error al crear el estudiante."));
+        }
+
+        // Mostrar formulario para inscribir estudiante
         function mostrarInscribir(estudianteId) {
             document.getElementById("form-inscripcion").style.display = "block";
             document.getElementById("estudiante-id").value = estudianteId;
@@ -90,7 +144,11 @@
                     "Authorization": `Token ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ clases_inscritas: [claseId] })
+                body: JSON.stringify({ clases_inscritas: [parseInt(claseId)] })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("No se pudo inscribir al estudiante.");
+                return response.json();
             })
             .then(() => {
                 mostrarMensaje("success", "Estudiante inscrito con éxito.");
@@ -105,21 +163,39 @@
     </script>
 </head>
 <body>
-    <h1>Inscripción de Estudiantes</h1>
+    <h1>Gestión de Estudiantes</h1>
     <div id="mensaje"></div>
 
-        <h1>Lista de estudiantes:</h1>
-    <ul id="lista-estudiantes">
+    <!-- Formulario para crear un nuevo estudiante -->
+    <div class="form-container">
+        <h2>Crear Nuevo Estudiante</h2>
+        <form id="form-crear-estudiante" onsubmit="event.preventDefault(); crearEstudiante();">
+            <label for="nuevo-nombre">Nombre:</label>
+            <input type="text" id="nuevo-nombre" required>
+            <br>
+            <label for="nuevo-correo">Correo:</label>
+            <input type="email" id="nuevo-correo" required>
+            <br><br>
+            <button type="submit">Crear Estudiante</button>
+        </form>
+    </div>
 
-    </ul>
+    <!-- Lista de estudiantes -->
+    <h2>Lista de Estudiantes</h2>
+    <ul id="lista-estudiantes"></ul>
 
-    
-    <div id="form-inscripcion" style="display:none;">
+    <!-- Formulario para inscribir estudiantes en clase -->
+    <div id="form-inscripcion" class="form-container" style="display:none;">
         <h2>Inscribir Estudiante en Clase</h2>
+        <label for="clase-id">Seleccionar Clase:</label>
         <select id="clase-id"></select>
         <input type="hidden" id="estudiante-id">
+        <br><br>
         <button onclick="inscribirEnClase()">Inscribir</button>
+        <button onclick="document.getElementById('form-inscripcion').style.display='none'">Cancelar</button>
     </div>
+
+    <br>
+    <a href="{% url 'menu' %}">ATRÁS</a>
 </body>
-<br><a href="{% url 'menu' %}">ATRAS</a>
 </html>
