@@ -1,26 +1,24 @@
-#views.yp
 from rest_framework import viewsets, generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-from .models import Clase, Estudiante, Profesor
-from .serializers import ClaseSerializer, EstudianteSerializer, ProfesorSerializer
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from .models import Clase, Estudiante, Profesor
+from .serializers import ClaseSerializer, EstudianteSerializer, ProfesorSerializer
 
 
 # CRUD para Clases
-@login_required
-class ClaseViewSet(viewsets.ModelViewSet):
+class ClaseViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     queryset = Clase.objects.all()
     serializer_class = ClaseSerializer
     permission_classes = [IsAuthenticated]
 
 
 # CRUD para Estudiantes
-@login_required
-class EstudianteViewSet(viewsets.ModelViewSet):
+class EstudianteViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     queryset = Estudiante.objects.all()
     serializer_class = EstudianteSerializer
     permission_classes = [IsAuthenticated]
@@ -42,8 +40,7 @@ class EstudianteViewSet(viewsets.ModelViewSet):
 
 
 # CRUD para Profesores
-@login_required
-class ProfesorViewSet(viewsets.ModelViewSet):
+class ProfesorViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     queryset = Profesor.objects.all()
     serializer_class = ProfesorSerializer
     permission_classes = [IsAuthenticated]
@@ -65,8 +62,7 @@ class ProfesorViewSet(viewsets.ModelViewSet):
 
 
 # Búsquedas personalizadas: Clases por profesor o horario
-@login_required
-class BuscarClasesView(APIView):
+class BuscarClasesView(LoginRequiredMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
@@ -88,9 +84,27 @@ class BuscarClasesView(APIView):
         serializer = ClaseSerializer(clases, many=True)
         return Response(serializer.data)
 
+
+# Vista del menú principal protegida por login_required
 @login_required
 def menu_principal(request):
-    return render(request, 'menu.html')  
+    return render(request, 'menu.html')
 
+
+# Vista del login
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login
+
+# Vista del login
 def login(request):
-    return render(render, 'login.html' )
+    if request.method == "POST":
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user:
+            auth_login(request, user)
+            return redirect('menu')  # Redirige al menú principal
+        else:
+            return render(request, 'login/login.html', {'error': 'Credenciales incorrectas'})
+    return render(request, 'login/login.html')
+
