@@ -20,64 +20,42 @@ class ClaseViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
 
 
 # CRUD para Estudiantes
-class EstudianteViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
+class EstudianteViewSet(viewsets.ModelViewSet):
     queryset = Estudiante.objects.all()
     serializer_class = EstudianteSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request, *args, **kwargs):
-        clases_ids = request.data.get('clases_inscritas', [])
-        self._validar_clases(clases_ids)
-        estudiante = super().create(request, *args, **kwargs)
-        estudiante.instance.clases_inscritas.set(clases_ids)
-        return estudiante
-
     def update(self, request, *args, **kwargs):
-        clases_ids = request.data.get('clases_inscritas', [])
-        self._validar_clases(clases_ids)
         estudiante = self.get_object()
-        response = super().update(request, *args, **kwargs)
-        estudiante.clases_inscritas.set(clases_ids)  # Actualiza las clases inscritas
-        return response
+        clases_ids = request.data.get('clases_inscritas', [])
 
-    def _validar_clases(self, clases_ids):
-        """
-        Valida que las clases proporcionadas existan en la base de datos.
-        """
+        # Validar las clases proporcionadas
         if not all(Clase.objects.filter(id=clase_id).exists() for clase_id in clases_ids):
             raise ValidationError({"detail": "Algunas clases proporcionadas no existen."})
 
+        # Actualizar las clases inscritas
+        estudiante.clases_inscritas.set(clases_ids)
+        estudiante.save()
+
+        return Response(EstudianteSerializer(estudiante).data, status=status.HTTP_200_OK)
+
 
 # CRUD para Profesores
-class ProfesorViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
-    queryset = Profesor.objects.all()
+class ProfesorViewSet(viewsets.ModelViewSet):
+    queryset = Profesor.objects.all().prefetch_related('clases_impartidas')
     serializer_class = ProfesorSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        """
-        Valida y asigna las clases impartidas al crear un profesor.
-        """
         clases_ids = self.request.data.get('clases_impartidas', [])
-        self._validar_clases(clases_ids)
         profesor = serializer.save()
         profesor.clases_impartidas.set(clases_ids)
 
     def perform_update(self, serializer):
-        """
-        Valida y actualiza las clases impartidas al editar un profesor.
-        """
         clases_ids = self.request.data.get('clases_impartidas', [])
-        self._validar_clases(clases_ids)
         profesor = serializer.save()
         profesor.clases_impartidas.set(clases_ids)
 
-    def _validar_clases(self, clases_ids):
-        """
-        Valida que las clases proporcionadas existan en la base de datos.
-        """
-        if not all(Clase.objects.filter(id=clase_id).exists() for clase_id in clases_ids):
-            raise ValidationError({"detail": "Algunas clases proporcionadas no existen."})
 
 
 # Búsquedas personalizadas: Clases por profesor o horario

@@ -16,15 +16,14 @@
                 const lista = document.getElementById("lista-profesores");
                 lista.innerHTML = "";
                 data.forEach(profesor => {
-                    const clases = profesor.clases_impartidas.length > 0 
-                        ? profesor.clases_impartidas.join(", ") 
-                        : "Ninguna";
-                    lista.innerHTML += `
-                        <li>
-                            ${profesor.nombre} - ${profesor.especialidad} (Clases: ${clases})
-                            <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
-                        </li>
+                    const clases = profesor.clases_impartidas.join(", ") || "Sin clases";
+                    const item = document.createElement("li");
+                    item.innerHTML = `
+                        ${profesor.nombre} - ${profesor.especialidad} (Clases: ${clases})
+                        <button onclick="cargarFormulario(${profesor.id})">Editar</button>
+                        <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
                     `;
+                    lista.appendChild(item);
                 });
             });
         }
@@ -36,35 +35,53 @@
                 const select = document.getElementById("clases-impartidas");
                 select.innerHTML = "";
                 data.forEach(clase => {
-                    select.innerHTML += `<option value="${clase.id}">${clase.nombre}</option>`;
+                    const option = document.createElement("option");
+                    option.value = clase.id;
+                    option.textContent = `${clase.nombre} - ${clase.horario}`;
+                    select.appendChild(option);
                 });
             });
         }
 
-        function crearProfesor() {
+        function crearOEditarProfesor() {
+            const id = document.getElementById("profesor-id").value;
             const nombre = document.getElementById("nombre").value;
             const especialidad = document.getElementById("especialidad").value;
             const clases = Array.from(document.getElementById("clases-impartidas").selectedOptions)
-                                .map(option => parseInt(option.value));
+                                .map(opt => parseInt(opt.value));
 
-            fetch(endpointProfesores, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                },
+            const url = id ? `${endpointProfesores}${id}/` : endpointProfesores;
+            const method = id ? "PUT" : "POST";
+
+            fetch(url, {
+                method,
+                headers: { "Authorization": `Token ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, especialidad, clases_impartidas: clases })
-            }).then(() => {
+            })
+            .then(() => {
                 cargarProfesores();
                 document.getElementById("form-profesor").reset();
+                document.getElementById("profesor-id").value = "";
+            });
+        }
+
+        function cargarFormulario(id) {
+            fetch(`${endpointProfesores}${id}/`, { headers: { "Authorization": `Token ${token}` } })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("profesor-id").value = id;
+                document.getElementById("nombre").value = data.nombre;
+                document.getElementById("especialidad").value = data.especialidad;
             });
         }
 
         function eliminarProfesor(id) {
-            fetch(`${endpointProfesores}${id}/`, {
-                method: "DELETE",
-                headers: { "Authorization": `Token ${token}` }
-            }).then(() => cargarProfesores());
+            if (confirm("¿Seguro que quieres eliminar este profesor?")) {
+                fetch(`${endpointProfesores}${id}/`, {
+                    method: "DELETE",
+                    headers: { "Authorization": `Token ${token}` }
+                }).then(() => cargarProfesores());
+            }
         }
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -75,17 +92,15 @@
 </head>
 <body>
     <h1>CRUD de Profesores</h1>
-
-    <form id="form-profesor" onsubmit="event.preventDefault(); crearProfesor();">
+    <form id="form-profesor" onsubmit="event.preventDefault(); crearOEditarProfesor();">
+        <input type="hidden" id="profesor-id">
         <input type="text" id="nombre" placeholder="Nombre" required>
         <input type="text" id="especialidad" placeholder="Especialidad" required>
         <select id="clases-impartidas" multiple></select>
         <button type="submit">Guardar</button>
     </form>
-
     <h2>Lista de Profesores</h2>
     <ul id="lista-profesores"></ul>
-
     <a href="{% url 'menu' %}">ATRÁS</a>
 </body>
 </html>

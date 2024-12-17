@@ -13,7 +13,7 @@
         .success-message { color: green; }
         h1, h2 { color: #333; }
         button {
-            margin: 5px;
+            margin: 5px;    
             padding: 5px 10px;
             cursor: pointer;
         }
@@ -33,7 +33,7 @@
         }
     </style>
     <script>
-        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Token de autenticación
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de";
         const endpointEstudiantes = "http://127.0.0.1:8000/api/estudiantes/";
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
 
@@ -45,7 +45,7 @@
             setTimeout(() => mensajeDiv.textContent = "", 3000);
         }
 
-        // Cargar estudiantes
+        // Cargar estudiantes y sus clases inscritas
         function cargarEstudiantes() {
             fetch(endpointEstudiantes, {
                 method: "GET",
@@ -60,10 +60,15 @@
                 listaEstudiantes.innerHTML = ""; // Limpiar lista
 
                 data.forEach(estudiante => {
+                    const clases = estudiante.clases_inscritas.length > 0
+                        ? estudiante.clases_inscritas.join(", ")
+                        : "Sin inscribir";
+
                     const item = document.createElement("li");
                     item.innerHTML = `
-                        <strong>${estudiante.nombre}</strong> - ${estudiante.correo}
+                        <strong>${estudiante.nombre}</strong> - ${estudiante.correo} - Clases: ${clases}
                         <button onclick="mostrarInscribir(${estudiante.id})">Inscribir en Clase</button>
+                        <button onclick="eliminarEstudiante(${estudiante.id})">Eliminar</button>
                     `;
                     listaEstudiantes.appendChild(item);
                 });
@@ -156,6 +161,24 @@
                 cargarEstudiantes();
             })
             .catch(() => mostrarMensaje("error", "Error al inscribir en clase."));
+        }
+
+        // Eliminar estudiante
+        function eliminarEstudiante(estudianteId) {
+            if (confirm("¿Estás seguro de eliminar este estudiante?")) {
+                fetch(`${endpointEstudiantes}${estudianteId}/`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Token ${token}`,
+                        "Content-Type": "application/json"
+                    }
+                })
+                .then(() => {
+                    mostrarMensaje("success", "Estudiante eliminado con éxito.");
+                    cargarEstudiantes();
+                })
+                .catch(() => mostrarMensaje("error", "Error al eliminar el estudiante."));
+            }
         }
 
         // Cargar estudiantes al iniciar

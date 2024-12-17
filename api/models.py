@@ -3,7 +3,7 @@ from django.db import models
 # Modelo Clase
 class Clase(models.Model):
     nombre = models.CharField(max_length=100)
-    horario = models.TimeField()
+    horario = models.CharField(max_length=100)
     descripcion = models.TextField()
 
     def __str__(self):
@@ -13,8 +13,8 @@ class Clase(models.Model):
 # Modelo Estudiante
 class Estudiante(models.Model):
     nombre = models.CharField(max_length=100)
-    correo = models.EmailField()
-    clases_inscritas = models.ManyToManyField(Clase, related_name="estudiantes", blank=True)
+    correo = models.EmailField(unique=True)
+    clases_inscritas = models.ManyToManyField(Clase, related_name='estudiantes')
 
     def __str__(self):
         return self.nombre
