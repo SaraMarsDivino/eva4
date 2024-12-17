@@ -1,5 +1,45 @@
 Descripción del Proyecto Este proyecto es una aplicación web desarrollada en Django y HTML/CSS/JavaScript para la gestión de estudiantes, profesores y clases. Permite realizar operaciones CRUD (Crear, Leer, Actualizar y Eliminar) y asignar clases a estudiantes y profesores.
 
+Modelos
+Los modelos principales del proyecto son Estudiante, Profesor y Clase, cada uno con sus atributos:
+
+Estudiante
+
+id (int): Identificador único.
+nombre (str): Nombre del estudiante.
+correo (str): Correo electrónico del estudiante.
+clases_inscritas (ManyToMany): Clases en las que el estudiante está inscrito.
+Profesor
+
+id (int): Identificador único.
+nombre (str): Nombre del profesor.
+especialidad (str): Área de especialización del profesor.
+clases_impartidas (ManyToMany): Clases que el profesor imparte.
+Clase
+
+id (int): Identificador único.
+nombre (str): Nombre de la clase.
+horario (str): Horario de la clase.
+descripcion (str): Descripción de la clase
+
+. Ejemplos de uso de la API 🛠️
+A continuación, se describen ejemplos básicos de uso de la API REST para Estudiantes, Profesores y Clases.
+
+Autenticación
+La API utiliza Token para la autenticación. Debes incluir el token en los encabezados de cada solicitud:
+
+Crear un recurso
+Crear Estudiante: Envía un nombre y un correo para registrar un nuevo estudiante.
+Crear Profesor: Proporciona un nombre y una especial dad.
+Crear Clase: Define un nombre, horario y descripción de la clase.
+Obtener recursos
+Puedes obtener listas de Estudiantes, Profesores o Clases usando solicitudes GET.
+Los datos incluyen información detallada y relaciones, como clases inscritas en estudiantes o clases impartidas por profesores.
+
+
+
+
+
 La interfaz está diseñada con una paleta de colores inspirada en League of Legends para una mejor experiencia visual.
 
 Características Principales CRUD Completo: Crear, editar y eliminar estudiantes, profesores y clases. Asignación de Clases: Inscribir estudiantes en clases. Asignar clases a profesores.

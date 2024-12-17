@@ -6,137 +6,69 @@
     <title>Iniciar Sesión</title>
 
     <style>
-        /* General */
+        /* Estilo global */
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #1f1f2e; /* Fondo oscuro general */
-            color: #d4af37; /* Dorado suave */
-        }
-    
-        h1, h2 {
-            text-align: center;
-            color: #d4af37; /* Títulos dorados */
-            margin-top: 20px;
+            height: 100vh;
+            display: flex;
+            justify-content: center; /* Centra horizontalmente */
+            align-items: center; /* Centra verticalmente */
+            background-color: #1c1c2e; /* Color de fondo oscuro */
+            font-family: Arial, sans-serif;
+            color: #e6d37a; /* Color dorado */
         }
     
         /* Contenedor del formulario */
-        .form-container {
-            background-color: #2c2c3c; /* Fondo oscuro */
-            width: 50%;
-            margin: 20px auto;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px #d4af37; /* Sombra dorada */
-            color: #fff; /* Letras blancas */
+        .login-container {
+            background-color: #2b2b3b; /* Color de fondo del rectángulo */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 300px;
         }
     
-        /* Formulario */
-        .form-container label {
+        /* Título */
+        .login-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+    
+        /* Inputs */
+        .login-container input {
             display: block;
-            margin: 10px 0 5px;
-        }
-    
-        .form-container input {
             width: 100%;
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #d4af37;
-            border-radius: 5px;
-            background-color: #3a3a4a;
-            color: #fff; /* Letras blancas */
-        }
-    
-        .form-container button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    
-        .form-container button:hover {
-            background-color: #0056b3;
-        }
-    
-        /* Lista de elementos */
-        ul {
-            list-style-type: none;
-            padding: 0;
-            margin: 0 auto;
-            width: 80%; /* Reducir el ancho */
-            max-width: 800px; /* Limita el tamaño horizontal */
-        }
-    
-        ul li {
-            background-color: #2c2c3c; /* Fondo oscuro para filas */
-            color: #fff; /* Color uniforme para los datos */
-            margin: 10px 0;
             padding: 10px;
-            border: 1px solid #d4af37; /* Borde dorado */
-            border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 0 5px #d4af37;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            background-color: #3b3b4f;
+            color: #e6e6e6; /* Color de texto claro */
         }
     
-        ul li strong {
-            color: #d4af37; /* Texto importante dorado */
-        }
-    
-        /* Botones */
-        button {
-            background-color: #007bff;
+        /* Botón */
+        .login-container button {
+            background-color: #0a75ad; /* Azul claro */
             color: #fff;
             border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+            padding: 10px 15px;
+            margin-top: 10px;
+            width: 100%;
+            border-radius: 4px;
             cursor: pointer;
-            margin-left: 5px;
+            font-weight: bold;
         }
     
-        button:hover {
-            background-color: #0056b3;
-        }
-    
-        /* Botón Siguiente/Anterior */
-        #paginacion {
-            text-align: center;
-            margin-top: 20px;
-        }
-    
-        #paginacion button {
-            background-color: #007bff;
-            color: #fff;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    
-        #paginacion button:hover {
-            background-color: #0056b3;
-        }
-    
-        /* Enlace atrás */
-        a {
-            display: block;
-            text-align: center;
-            margin: 20px auto;
-            color: #d4af37;
-            text-decoration: none;
-        }
-    
-        a:hover {
-            text-decoration: underline;
+        .login-container button:hover {
+            background-color: #095f8a; /* Azul más oscuro */
         }
     </style>
     
+    
 </head>
 <body>
+    <div class="login-container">
     <h1>Iniciar Sesión</h1>
     <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
@@ -148,6 +80,7 @@
 
         <button type="submit">Iniciar Sesión</button>
     </form>
+    </div>
 </body>
 </html>
     
