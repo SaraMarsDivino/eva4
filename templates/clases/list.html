@@ -4,67 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD de Clases</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        button { margin: 5px; padding: 5px 10px; cursor: pointer; }
+        input { margin: 5px; padding: 5px; }
+        #lista-clases { list-style: none; padding: 0; }
+        #lista-clases li { margin: 10px 0; }
+    </style>
     <script>
-        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de"; // Token de autenticación
+        const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de";
         const endpoint = "http://127.0.0.1:8000/api/clases/";
+        let paginaActual = 1;
 
-        // Cargar lista de clases
-        function cargarClases() {
-            fetch(endpoint, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
+        function cargarClases(pagina = 1) {
+            fetch(`${endpoint}?page=${pagina}`, {
+                headers: { "Authorization": `Token ${token}` }
             })
             .then(response => response.json())
             .then(data => {
                 const listaClases = document.getElementById("lista-clases");
                 listaClases.innerHTML = "";
-                data.forEach(clase => {
-                    const item = document.createElement("li");
-                    item.innerHTML = `
-                        <strong>${clase.nombre}</strong> - ${clase.horario} - ${clase.descripcion}
-                        <button onclick="cargarFormulario(${clase.id})">Editar</button>
-                        <button onclick="eliminarClase(${clase.id})">Eliminar</button>
-                    `;
-                    listaClases.appendChild(item);
+                data.results.forEach(clase => {
+                    listaClases.innerHTML += `
+                        <li>
+                            <strong>${clase.nombre}</strong> - ${clase.horario} - ${clase.descripcion}
+                            <button onclick="cargarFormulario(${clase.id})">Editar</button>
+                            <button onclick="eliminarClase(${clase.id})">Eliminar</button>
+                        </li>`;
                 });
-            })
-            .catch(error => alert("Error al cargar las clases: " + error.message));
+                mostrarPaginacion(data, cargarClases);
+            });
         }
 
-        // Crear o actualizar una clase
-        function crearOActualizarClase() {
+        function mostrarPaginacion(data, funcion) {
+            const paginacionDiv = document.getElementById("paginacion");
+            paginacionDiv.innerHTML = "";
+            if (data.previous) {
+                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual - 1})">Anterior</button>`;
+            }
+            if (data.next) {
+                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual + 1})">Siguiente</button>`;
+            }
+            paginaActual = paginaActual;
+        }
+
+        function crearOEditarClase() {
             const id = document.getElementById("clase-id").value;
             const nombre = document.getElementById("nombre").value;
             const horario = document.getElementById("horario").value;
             const descripcion = document.getElementById("descripcion").value;
 
-            const url = id ? `${endpoint}${id}/` : endpoint; // URL para POST o PUT
+            const url = id ? `${endpoint}${id}/` : endpoint;
             const method = id ? "PUT" : "POST";
 
             fetch(url, {
                 method: method,
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Token ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, horario, descripcion })
             })
-            .then(response => {
-                if (!response.ok) throw new Error("Error al guardar la clase.");
-                cargarClases();
+            .then(() => {
+                cargarClases(paginaActual);
                 document.getElementById("form-clase").reset();
                 document.getElementById("clase-id").value = "";
-            })
-            .catch(error => alert("Error: " + error.message));
+            });
         }
 
-        // Cargar datos de clase en el formulario
         function cargarFormulario(id) {
             fetch(`${endpoint}${id}/`, {
-                method: "GET",
                 headers: { "Authorization": `Token ${token}` }
             })
             .then(response => response.json())
@@ -73,52 +80,38 @@
                 document.getElementById("nombre").value = clase.nombre;
                 document.getElementById("horario").value = clase.horario;
                 document.getElementById("descripcion").value = clase.descripcion;
-            })
-            .catch(error => alert("Error al cargar la clase: " + error.message));
+            });
         }
 
-        // Eliminar una clase
         function eliminarClase(id) {
             if (confirm("¿Estás seguro de que quieres eliminar esta clase?")) {
                 fetch(`${endpoint}${id}/`, {
                     method: "DELETE",
                     headers: { "Authorization": `Token ${token}` }
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error("Error al eliminar la clase.");
-                    cargarClases();
-                })
-                .catch(error => alert("Error: " + error.message));
+                }).then(() => cargarClases(paginaActual));
             }
         }
 
-        // Cargar las clases al iniciar
-        document.addEventListener("DOMContentLoaded", cargarClases);
+        document.addEventListener("DOMContentLoaded", () => cargarClases());
     </script>
 </head>
 <body>
     <h1>CRUD de Clases</h1>
-
-    <!-- Formulario de creación/edición -->
-    <form id="form-clase" onsubmit="event.preventDefault(); crearOActualizarClase();">
+    <form id="form-clase" onsubmit="event.preventDefault(); crearOEditarClase();">
         <input type="hidden" id="clase-id">
         <label for="nombre">Nombre:</label>
         <input type="text" id="nombre" placeholder="Nombre de la clase" required>
-        <br>
         <label for="horario">Horario:</label>
         <input type="time" id="horario" required>
-        <br>
         <label for="descripcion">Descripción:</label>
         <input type="text" id="descripcion" placeholder="Descripción" required>
-        <br><br>
         <button type="submit">Guardar</button>
     </form>
 
-    <!-- Lista de clases -->
     <h2>Lista de Clases</h2>
     <ul id="lista-clases"></ul>
+    <div id="paginacion"></div>
 
-    <br>
-    <a href="{% url 'menu' %}">ATRÁS</a>
+    <br><a href="{% url 'menu' %}">ATRÁS</a>
 </body>
 </html>

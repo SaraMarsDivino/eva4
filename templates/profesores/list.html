@@ -4,45 +4,71 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD de Profesores</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1, h2 { color: #333; }
+        button { margin: 5px; padding: 5px 10px; cursor: pointer; }
+        input, select { margin: 5px; padding: 5px; }
+        #lista-profesores { list-style: none; padding: 0; }
+        #lista-profesores li { margin: 10px 0; }
+    </style>
     <script>
         const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de";
         const endpointProfesores = "http://127.0.0.1:8000/api/profesores/";
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
+        let paginaActual = 1;
 
-        function cargarProfesores() {
-            fetch(endpointProfesores, { headers: { "Authorization": `Token ${token}` } })
+        // Cargar profesores con paginación
+        function cargarProfesores(pagina = 1) {
+            fetch(`${endpointProfesores}?page=${pagina}`, {
+                headers: { "Authorization": `Token ${token}` }
+            })
             .then(response => response.json())
             .then(data => {
                 const lista = document.getElementById("lista-profesores");
                 lista.innerHTML = "";
-                data.forEach(profesor => {
-                    const clases = profesor.clases_impartidas.join(", ") || "Sin clases";
-                    const item = document.createElement("li");
-                    item.innerHTML = `
-                        ${profesor.nombre} - ${profesor.especialidad} (Clases: ${clases})
-                        <button onclick="cargarFormulario(${profesor.id})">Editar</button>
-                        <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
-                    `;
-                    lista.appendChild(item);
+                data.results.forEach(profesor => {
+                    const clases = profesor.clases_impartidas.length > 0 
+                        ? profesor.clases_impartidas.join(", ") 
+                        : "Sin clases";
+                    lista.innerHTML += `
+                        <li>
+                            <strong>${profesor.nombre}</strong> - ${profesor.especialidad} 
+                            (Clases: ${clases})
+                            <button onclick="cargarFormulario(${profesor.id})">Editar</button>
+                            <button onclick="eliminarProfesor(${profesor.id})">Eliminar</button>
+                        </li>`;
                 });
+                mostrarPaginacion(data, cargarProfesores);
             });
         }
 
+        // Mostrar paginación
+        function mostrarPaginacion(data, funcion) {
+            const paginacionDiv = document.getElementById("paginacion");
+            paginacionDiv.innerHTML = "";
+            if (data.previous) paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual - 1})">Anterior</button>`;
+            if (data.next) paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual + 1})">Siguiente</button>`;
+            paginaActual = paginaActual;
+        }
+
+        // Cargar todas las clases en el formulario
         function cargarClases() {
-            fetch(endpointClases, { headers: { "Authorization": `Token ${token}` } })
+            fetch(endpointClases, {
+                headers: { "Authorization": `Token ${token}` }
+            })
             .then(response => response.json())
             .then(data => {
-                const select = document.getElementById("clases-impartidas");
-                select.innerHTML = "";
-                data.forEach(clase => {
-                    const option = document.createElement("option");
-                    option.value = clase.id;
-                    option.textContent = `${clase.nombre} - ${clase.horario}`;
-                    select.appendChild(option);
+                const selectClases = document.getElementById("clases-impartidas");
+                selectClases.innerHTML = "";
+                data.results.forEach(clase => {
+                    selectClases.innerHTML += `<option value="${clase.id}">${clase.nombre} - ${clase.horario}</option>`;
                 });
-            });
+            })
+            .catch(() => alert("Error al cargar las clases."));
         }
 
+        // Crear o editar un profesor
         function crearOEditarProfesor() {
             const id = document.getElementById("profesor-id").value;
             const nombre = document.getElementById("nombre").value;
@@ -59,28 +85,45 @@
                 body: JSON.stringify({ nombre, especialidad, clases_impartidas: clases })
             })
             .then(() => {
-                cargarProfesores();
+                cargarProfesores(paginaActual);
                 document.getElementById("form-profesor").reset();
                 document.getElementById("profesor-id").value = "";
             });
         }
 
+        // Cargar los datos del profesor seleccionado en el formulario
         function cargarFormulario(id) {
-            fetch(`${endpointProfesores}${id}/`, { headers: { "Authorization": `Token ${token}` } })
+            fetch(`${endpointProfesores}${id}/`, {
+                headers: { "Authorization": `Token ${token}` }
+            })
             .then(response => response.json())
             .then(data => {
                 document.getElementById("profesor-id").value = id;
                 document.getElementById("nombre").value = data.nombre;
                 document.getElementById("especialidad").value = data.especialidad;
+
+                // Marcar las clases que ya están asignadas
+                cargarClases();
+                setTimeout(() => {
+                    const select = document.getElementById("clases-impartidas");
+                    data.clases_impartidas.forEach(clase => {
+                        for (let option of select.options) {
+                            if (parseInt(option.value) === clase) {
+                                option.selected = true;
+                            }
+                        }
+                    });
+                }, 500);
             });
         }
 
+        // Eliminar un profesor
         function eliminarProfesor(id) {
             if (confirm("¿Seguro que quieres eliminar este profesor?")) {
                 fetch(`${endpointProfesores}${id}/`, {
                     method: "DELETE",
                     headers: { "Authorization": `Token ${token}` }
-                }).then(() => cargarProfesores());
+                }).then(() => cargarProfesores(paginaActual));
             }
         }
 
@@ -94,13 +137,19 @@
     <h1>CRUD de Profesores</h1>
     <form id="form-profesor" onsubmit="event.preventDefault(); crearOEditarProfesor();">
         <input type="hidden" id="profesor-id">
-        <input type="text" id="nombre" placeholder="Nombre" required>
+        <label>Nombre:</label>
+        <input type="text" id="nombre" placeholder="Nombre del profesor" required>
+        <label>Especialidad:</label>
         <input type="text" id="especialidad" placeholder="Especialidad" required>
+        <label>Clases:</label>
         <select id="clases-impartidas" multiple></select>
         <button type="submit">Guardar</button>
     </form>
+
     <h2>Lista de Profesores</h2>
     <ul id="lista-profesores"></ul>
-    <a href="{% url 'menu' %}">ATRÁS</a>
+    <div id="paginacion"></div>
+
+    <br><a href="{% url 'menu' %}">ATRÁS</a>
 </body>
 </html>

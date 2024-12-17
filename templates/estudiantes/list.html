@@ -5,39 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Estudiantes</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
         .error-message { color: red; }
         .success-message { color: green; }
         h1, h2 { color: #333; }
-        button {
-            margin: 5px;    
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-        input, select {
-            margin: 5px;
-            padding: 5px;
-        }
-        .form-container {
-            margin-top: 20px;
-        }
-        #lista-estudiantes {
-            list-style: none;
-            padding: 0;
-        }
-        #lista-estudiantes li {
-            margin: 10px 0;
-        }
+        button { margin: 5px; padding: 5px 10px; cursor: pointer; }
+        input, select { margin: 5px; padding: 5px; }
+        .form-container { margin-top: 20px; }
+        #lista-estudiantes { list-style: none; padding: 0; }
+        #lista-estudiantes li { margin: 10px 0; }
     </style>
     <script>
         const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de";
         const endpointEstudiantes = "http://127.0.0.1:8000/api/estudiantes/";
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
+        let paginaActual = 1;
 
-        // Mostrar mensaje de éxito o error
         function mostrarMensaje(tipo, mensaje) {
             const mensajeDiv = document.getElementById("mensaje");
             mensajeDiv.className = tipo === "success" ? "success-message" : "error-message";
@@ -45,42 +28,46 @@
             setTimeout(() => mensajeDiv.textContent = "", 3000);
         }
 
-        // Cargar estudiantes y sus clases inscritas
-        function cargarEstudiantes() {
-            fetch(endpointEstudiantes, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
+        function cargarEstudiantes(pagina = 1) {
+            fetch(`${endpointEstudiantes}?page=${pagina}`, {
+                headers: { "Authorization": `Token ${token}` }
             })
             .then(response => response.json())
             .then(data => {
                 const listaEstudiantes = document.getElementById("lista-estudiantes");
-                listaEstudiantes.innerHTML = ""; // Limpiar lista
-
-                data.forEach(estudiante => {
-                    const clases = estudiante.clases_inscritas.length > 0
-                        ? estudiante.clases_inscritas.join(", ")
+                listaEstudiantes.innerHTML = "";
+                data.results.forEach(estudiante => {
+                    const clases = estudiante.clases_inscritas.length
+                        ? estudiante.clases_inscritas.map(clase => clase.nombre).join(", ")
                         : "Sin inscribir";
 
-                    const item = document.createElement("li");
-                    item.innerHTML = `
-                        <strong>${estudiante.nombre}</strong> - ${estudiante.correo} - Clases: ${clases}
-                        <button onclick="mostrarInscribir(${estudiante.id})">Inscribir en Clase</button>
-                        <button onclick="eliminarEstudiante(${estudiante.id})">Eliminar</button>
-                    `;
-                    listaEstudiantes.appendChild(item);
+                    listaEstudiantes.innerHTML += `
+                        <li>
+                            <strong>${estudiante.nombre}</strong> - ${estudiante.correo} - Clases: ${clases}
+                            <button onclick="mostrarInscribir(${estudiante.id})">Inscribir</button>
+                            <button onclick="eliminarEstudiante(${estudiante.id})">Eliminar</button>
+                        </li>`;
                 });
+                mostrarPaginacion(data, cargarEstudiantes);
             })
             .catch(() => mostrarMensaje("error", "Error al cargar los estudiantes."));
         }
 
-        // Crear un nuevo estudiante
+        function mostrarPaginacion(data, funcion) {
+            const paginacionDiv = document.getElementById("paginacion");
+            paginacionDiv.innerHTML = "";
+            if (data.previous) {
+                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual - 1})">Anterior</button>`;
+            }
+            if (data.next) {
+                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual + 1})">Siguiente</button>`;
+            }
+            paginaActual = paginaActual;
+        }
+
         function crearEstudiante() {
             const nombre = document.getElementById("nuevo-nombre").value.trim();
             const correo = document.getElementById("nuevo-correo").value.trim();
-
             if (!nombre || !correo) {
                 mostrarMensaje("error", "Todos los campos son obligatorios.");
                 return;
@@ -88,117 +75,73 @@
 
             fetch(endpointEstudiantes, {
                 method: "POST",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                },
+                headers: { "Authorization": `Token ${token}`, "Content-Type": "application/json" },
                 body: JSON.stringify({ nombre, correo })
             })
-            .then(response => {
-                if (!response.ok) throw new Error("No se pudo crear el estudiante.");
-                return response.json();
-            })
             .then(() => {
-                mostrarMensaje("success", "Estudiante creado con éxito.");
+                mostrarMensaje("success", "Estudiante creado.");
+                cargarEstudiantes(paginaActual);
                 document.getElementById("form-crear-estudiante").reset();
-                cargarEstudiantes();
-            })
-            .catch(() => mostrarMensaje("error", "Error al crear el estudiante."));
+            });
         }
 
-        // Mostrar formulario para inscribir estudiante
         function mostrarInscribir(estudianteId) {
             document.getElementById("form-inscripcion").style.display = "block";
             document.getElementById("estudiante-id").value = estudianteId;
-
-            fetch(endpointClases, {
-                method: "GET",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                }
-            })
+            fetch(endpointClases, { headers: { "Authorization": `Token ${token}` } })
             .then(response => response.json())
             .then(data => {
                 const selectClases = document.getElementById("clase-id");
-                selectClases.innerHTML = ""; // Limpiar opciones
-
-                data.forEach(clase => {
-                    const option = document.createElement("option");
-                    option.value = clase.id;
-                    option.textContent = `${clase.nombre} - ${clase.horario}`;
-                    selectClases.appendChild(option);
+                selectClases.innerHTML = "";
+                data.results.forEach(clase => {
+                    selectClases.innerHTML += `<option value="${clase.id}">${clase.nombre}</option>`;
                 });
-            })
-            .catch(() => mostrarMensaje("error", "Error al cargar las clases."));
+            });
         }
 
-        // Inscribir estudiante en clase
         function inscribirEnClase() {
             const estudianteId = document.getElementById("estudiante-id").value;
-            const claseId = document.getElementById("clase-id").value;
-
-            if (!claseId) {
-                mostrarMensaje("error", "Selecciona una clase antes de inscribir.");
-                return;
-            }
-
+            const clasesIds = Array.from(document.getElementById("clase-id").selectedOptions)
+                .map(option => parseInt(option.value));
             fetch(`${endpointEstudiantes}${estudianteId}/`, {
                 method: "PUT",
-                headers: {
-                    "Authorization": `Token ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ clases_inscritas: [parseInt(claseId)] })
-            })
-            .then(response => {
-                if (!response.ok) throw new Error("No se pudo inscribir al estudiante.");
-                return response.json();
+                headers: { "Authorization": `Token ${token}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ clases_inscritas: clasesIds })
             })
             .then(() => {
-                mostrarMensaje("success", "Estudiante inscrito con éxito.");
+                mostrarMensaje("success", "Estudiante inscrito.");
                 document.getElementById("form-inscripcion").style.display = "none";
-                cargarEstudiantes();
-            })
-            .catch(() => mostrarMensaje("error", "Error al inscribir en clase."));
+                cargarEstudiantes(paginaActual);
+            });
         }
 
-        // Eliminar estudiante
-        function eliminarEstudiante(estudianteId) {
-            if (confirm("¿Estás seguro de eliminar este estudiante?")) {
-                fetch(`${endpointEstudiantes}${estudianteId}/`, {
+        function eliminarEstudiante(id) {
+            if (confirm("¿Seguro que quieres eliminar este estudiante?")) {
+                fetch(`${endpointEstudiantes}${id}/`, {
                     method: "DELETE",
-                    headers: {
-                        "Authorization": `Token ${token}`,
-                        "Content-Type": "application/json"
-                    }
-                })
-                .then(() => {
-                    mostrarMensaje("success", "Estudiante eliminado con éxito.");
-                    cargarEstudiantes();
-                })
-                .catch(() => mostrarMensaje("error", "Error al eliminar el estudiante."));
+                    headers: { "Authorization": `Token ${token}` }
+                }).then(() => {
+                    mostrarMensaje("success", "Estudiante eliminado.");
+                    cargarEstudiantes(paginaActual);
+                });
             }
         }
 
-        // Cargar estudiantes al iniciar
-        document.addEventListener("DOMContentLoaded", cargarEstudiantes);
+        document.addEventListener("DOMContentLoaded", () => cargarEstudiantes());
     </script>
 </head>
 <body>
     <h1>Gestión de Estudiantes</h1>
     <div id="mensaje"></div>
 
-    <!-- Formulario para crear un nuevo estudiante -->
+    <!-- Formulario para crear estudiantes -->
     <div class="form-container">
         <h2>Crear Nuevo Estudiante</h2>
         <form id="form-crear-estudiante" onsubmit="event.preventDefault(); crearEstudiante();">
             <label for="nuevo-nombre">Nombre:</label>
             <input type="text" id="nuevo-nombre" required>
-            <br>
             <label for="nuevo-correo">Correo:</label>
             <input type="email" id="nuevo-correo" required>
-            <br><br>
             <button type="submit">Crear Estudiante</button>
         </form>
     </div>
@@ -206,19 +149,18 @@
     <!-- Lista de estudiantes -->
     <h2>Lista de Estudiantes</h2>
     <ul id="lista-estudiantes"></ul>
+    <div id="paginacion"></div>
 
-    <!-- Formulario para inscribir estudiantes en clase -->
+    <!-- Formulario para inscribir en clase -->
     <div id="form-inscripcion" class="form-container" style="display:none;">
-        <h2>Inscribir Estudiante en Clase</h2>
-        <label for="clase-id">Seleccionar Clase:</label>
-        <select id="clase-id"></select>
+        <h2>Inscribir en Clase</h2>
+        <label for="clase-id">Seleccionar Clases:</label>
+        <select id="clase-id" multiple></select>
         <input type="hidden" id="estudiante-id">
-        <br><br>
         <button onclick="inscribirEnClase()">Inscribir</button>
         <button onclick="document.getElementById('form-inscripcion').style.display='none'">Cancelar</button>
     </div>
 
-    <br>
-    <a href="{% url 'menu' %}">ATRÁS</a>
+    <br><a href="{% url 'menu' %}">ATRÁS</a>
 </body>
 </html>
