@@ -18,13 +18,15 @@
         let paginaActual = 1;
 
         function cargarClases(pagina = 1) {
-            fetch(`${endpoint}?page=${pagina}`, {
+            paginaActual = pagina; // Actualiza la página actual
+            fetch(`${endpoint}?page=${paginaActual}`, {
                 headers: { "Authorization": `Token ${token}` }
             })
             .then(response => response.json())
             .then(data => {
                 const listaClases = document.getElementById("lista-clases");
                 listaClases.innerHTML = "";
+
                 data.results.forEach(clase => {
                     listaClases.innerHTML += `
                         <li>
@@ -33,21 +35,24 @@
                             <button onclick="eliminarClase(${clase.id})">Eliminar</button>
                         </li>`;
                 });
-                mostrarPaginacion(data, cargarClases);
+
+                mostrarPaginacion(data, cargarClases); // Llama a la función paginación
             });
         }
+
 
         function mostrarPaginacion(data, funcion) {
             const paginacionDiv = document.getElementById("paginacion");
             paginacionDiv.innerHTML = "";
+
             if (data.previous) {
-                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual - 1})">Anterior</button>`;
+                paginacionDiv.innerHTML += `<button onclick="cargarClases(${paginaActual - 1})">Anterior</button>`;
             }
             if (data.next) {
-                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual + 1})">Siguiente</button>`;
+                paginacionDiv.innerHTML += `<button onclick="cargarClases(${paginaActual + 1})">Siguiente</button>`;
             }
-            paginaActual = paginaActual;
         }
+
 
         function crearOEditarClase() {
             const id = document.getElementById("clase-id").value;

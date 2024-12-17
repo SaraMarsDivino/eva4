@@ -3,12 +3,17 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import ClaseViewSet, EstudianteViewSet, ProfesorViewSet, BuscarClasesView
 from rest_framework.authtoken.views import obtain_auth_token
+from .views import ClaseViewSet, EstudianteViewSet, ProfesorViewSet
 
-# Router para CRUD
 router = DefaultRouter()
-router.register('clases', ClaseViewSet, basename='clase')
-router.register('estudiantes', EstudianteViewSet, basename='estudiante')
-router.register('profesores', ProfesorViewSet, basename='profesor')
+router.register('clases', ClaseViewSet)
+router.register('estudiantes', EstudianteViewSet)
+router.register('profesores', ProfesorViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
 
 urlpatterns = [
     # Rutas CRUD generadas por DRF

@@ -21,6 +21,7 @@
         const endpointClases = "http://127.0.0.1:8000/api/clases/";
         let paginaActual = 1;
 
+        // Mostrar mensajes
         function mostrarMensaje(tipo, mensaje) {
             const mensajeDiv = document.getElementById("mensaje");
             mensajeDiv.className = tipo === "success" ? "success-message" : "error-message";
@@ -28,7 +29,9 @@
             setTimeout(() => mensajeDiv.textContent = "", 3000);
         }
 
+        // Cargar estudiantes con paginación
         function cargarEstudiantes(pagina = 1) {
+            paginaActual = pagina; // Actualiza la página actual
             fetch(`${endpointEstudiantes}?page=${pagina}`, {
                 headers: { "Authorization": `Token ${token}` }
             })
@@ -36,58 +39,67 @@
             .then(data => {
                 const listaEstudiantes = document.getElementById("lista-estudiantes");
                 listaEstudiantes.innerHTML = "";
-                data.results.forEach(estudiante => {
-                    const clases = estudiante.clases_inscritas.length
-                        ? estudiante.clases_inscritas.map(clase => clase.nombre).join(", ")
-                        : "Sin inscribir";
 
-                    listaEstudiantes.innerHTML += `
-                        <li>
-                            <strong>${estudiante.nombre}</strong> - ${estudiante.correo} - Clases: ${clases}
-                            <button onclick="mostrarInscribir(${estudiante.id})">Inscribir</button>
-                            <button onclick="eliminarEstudiante(${estudiante.id})">Eliminar</button>
-                        </li>`;
+                // Iterar sobre los estudiantes
+                data.results.forEach(estudiante => {
+                    // Si las clases inscritas son IDs, realiza una consulta para obtener los nombres
+                    if (estudiante.clases_inscritas.length > 0 && typeof estudiante.clases_inscritas[0] === "number") {
+                        // Fetch para obtener detalles de las clases
+                        Promise.all(estudiante.clases_inscritas.map(claseId =>
+                            fetch(`${endpointClases}${claseId}/`, {
+                                headers: { "Authorization": `Token ${token}` }
+                            }).then(res => res.json())
+                        ))
+                        .then(clasesDetalles => {
+                            const clasesNombres = clasesDetalles.map(clase => clase.nombre).join(", ");
+                            agregarEstudianteEnLista(estudiante, clasesNombres);
+                        });
+                    } else {
+                        // Si las clases inscritas ya tienen nombres
+                        const clases = estudiante.clases_inscritas.length
+                            ? estudiante.clases_inscritas.map(clase => clase.nombre).join(", ")
+                            : "Sin inscribir";
+                        agregarEstudianteEnLista(estudiante, clases);
+                    }
                 });
+
+                // Mostrar paginación
                 mostrarPaginacion(data, cargarEstudiantes);
             })
             .catch(() => mostrarMensaje("error", "Error al cargar los estudiantes."));
         }
 
+        // Función auxiliar para agregar estudiante a la lista
+        function agregarEstudianteEnLista(estudiante, clases) {
+            const listaEstudiantes = document.getElementById("lista-estudiantes");
+            listaEstudiantes.innerHTML += `
+                <li>
+                    <strong>${estudiante.nombre}</strong> - ${estudiante.correo} - Clases: ${clases}
+                    <button onclick="mostrarInscribir(${estudiante.id})">Inscribir</button>
+                    <button onclick="eliminarEstudiante(${estudiante.id})">Eliminar</button>
+                </li>`;
+        }
+
+
+        // Mostrar paginación
         function mostrarPaginacion(data, funcion) {
             const paginacionDiv = document.getElementById("paginacion");
             paginacionDiv.innerHTML = "";
+
             if (data.previous) {
                 paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual - 1})">Anterior</button>`;
             }
+
             if (data.next) {
                 paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual + 1})">Siguiente</button>`;
             }
-            paginaActual = paginaActual;
         }
 
-        function crearEstudiante() {
-            const nombre = document.getElementById("nuevo-nombre").value.trim();
-            const correo = document.getElementById("nuevo-correo").value.trim();
-            if (!nombre || !correo) {
-                mostrarMensaje("error", "Todos los campos son obligatorios.");
-                return;
-            }
-
-            fetch(endpointEstudiantes, {
-                method: "POST",
-                headers: { "Authorization": `Token ${token}`, "Content-Type": "application/json" },
-                body: JSON.stringify({ nombre, correo })
-            })
-            .then(() => {
-                mostrarMensaje("success", "Estudiante creado.");
-                cargarEstudiantes(paginaActual);
-                document.getElementById("form-crear-estudiante").reset();
-            });
-        }
-
+        // Mostrar formulario de inscripción
         function mostrarInscribir(estudianteId) {
             document.getElementById("form-inscripcion").style.display = "block";
             document.getElementById("estudiante-id").value = estudianteId;
+
             fetch(endpointClases, { headers: { "Authorization": `Token ${token}` } })
             .then(response => response.json())
             .then(data => {
@@ -96,34 +108,45 @@
                 data.results.forEach(clase => {
                     selectClases.innerHTML += `<option value="${clase.id}">${clase.nombre}</option>`;
                 });
-            });
+            })
+            .catch(() => mostrarMensaje("error", "Error al cargar las clases."));
         }
 
+        // Inscribir estudiante en clase
         function inscribirEnClase() {
             const estudianteId = document.getElementById("estudiante-id").value;
             const clasesIds = Array.from(document.getElementById("clase-id").selectedOptions)
                 .map(option => parseInt(option.value));
+
             fetch(`${endpointEstudiantes}${estudianteId}/`, {
                 method: "PUT",
-                headers: { "Authorization": `Token ${token}`, "Content-Type": "application/json" },
+                headers: { 
+                    "Authorization": `Token ${token}`, 
+                    "Content-Type": "application/json" 
+                },
                 body: JSON.stringify({ clases_inscritas: clasesIds })
             })
-            .then(() => {
-                mostrarMensaje("success", "Estudiante inscrito.");
+            .then(response => {
+                if (!response.ok) throw new Error("Error al inscribir al estudiante.");
+                mostrarMensaje("success", "Estudiante inscrito exitosamente.");
                 document.getElementById("form-inscripcion").style.display = "none";
                 cargarEstudiantes(paginaActual);
-            });
+            })
+            .catch(() => mostrarMensaje("error", "Error al inscribir al estudiante."));
         }
 
+        // Eliminar estudiante
         function eliminarEstudiante(id) {
             if (confirm("¿Seguro que quieres eliminar este estudiante?")) {
                 fetch(`${endpointEstudiantes}${id}/`, {
                     method: "DELETE",
                     headers: { "Authorization": `Token ${token}` }
-                }).then(() => {
+                })
+                .then(() => {
                     mostrarMensaje("success", "Estudiante eliminado.");
                     cargarEstudiantes(paginaActual);
-                });
+                })
+                .catch(() => mostrarMensaje("error", "Error al eliminar el estudiante."));
             }
         }
 
