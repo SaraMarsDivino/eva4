@@ -4,6 +4,137 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión</title>
+
+    <style>
+        /* General */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1f1f2e; /* Fondo oscuro general */
+            color: #d4af37; /* Dorado suave */
+        }
+    
+        h1, h2 {
+            text-align: center;
+            color: #d4af37; /* Títulos dorados */
+            margin-top: 20px;
+        }
+    
+        /* Contenedor del formulario */
+        .form-container {
+            background-color: #2c2c3c; /* Fondo oscuro */
+            width: 50%;
+            margin: 20px auto;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #d4af37; /* Sombra dorada */
+            color: #fff; /* Letras blancas */
+        }
+    
+        /* Formulario */
+        .form-container label {
+            display: block;
+            margin: 10px 0 5px;
+        }
+    
+        .form-container input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #d4af37;
+            border-radius: 5px;
+            background-color: #3a3a4a;
+            color: #fff; /* Letras blancas */
+        }
+    
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+    
+        /* Lista de elementos */
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0 auto;
+            width: 80%; /* Reducir el ancho */
+            max-width: 800px; /* Limita el tamaño horizontal */
+        }
+    
+        ul li {
+            background-color: #2c2c3c; /* Fondo oscuro para filas */
+            color: #fff; /* Color uniforme para los datos */
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #d4af37; /* Borde dorado */
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 5px #d4af37;
+        }
+    
+        ul li strong {
+            color: #d4af37; /* Texto importante dorado */
+        }
+    
+        /* Botones */
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+    
+        button:hover {
+            background-color: #0056b3;
+        }
+    
+        /* Botón Siguiente/Anterior */
+        #paginacion {
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        #paginacion button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    
+        #paginacion button:hover {
+            background-color: #0056b3;
+        }
+    
+        /* Enlace atrás */
+        a {
+            display: block;
+            text-align: center;
+            margin: 20px auto;
+            color: #d4af37;
+            text-decoration: none;
+        }
+    
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    
 </head>
 <body>
     <h1>Iniciar Sesión</h1>

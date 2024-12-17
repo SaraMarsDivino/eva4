@@ -5,13 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRUD de Profesores</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1, h2 { color: #333; }
-        button { margin: 5px; padding: 5px 10px; cursor: pointer; }
-        input, select { margin: 5px; padding: 5px; }
-        #lista-profesores { list-style: none; padding: 0; }
-        #lista-profesores li { margin: 10px 0; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1e1f26;
+            color: #e1c699;
+            margin: 0;
+            padding: 0;
+        }
+    
+        h1, h2 {
+            text-align: center;
+            color: #e1c699;
+            margin-bottom: 20px;
+        }
+    
+        .container {
+            width: 80%;
+            max-width: 700px;
+            margin: 20px auto;
+            background-color: #2a2d37;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 2px #9f7f35;
+            padding: 20px;
+        }
+    
+        .form-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    
+        .form-container input {
+            display: block;
+            width: 90%;
+            margin: 10px auto;
+            padding: 8px;
+            border: 1px solid #9f7f35;
+            background-color: #1e1f26;
+            color: #e1c699;
+            border-radius: 5px;
+        }
+    
+        button {
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    
+        button:hover {
+            background-color: #0056b3;
+        }
+    
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+    
+        li {
+            background-color: #1e1f26;
+            margin: 5px 0;
+            padding: 10px;
+            border: 1px solid #9f7f35;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #e1c699;
+        }
+    
+        .paginacion {
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        a {
+            display: block;
+            text-align: center;
+            color: #9f7f35;
+            text-decoration: none;
+            margin-top: 20px;
+        }
     </style>
+    
     <script>
         const token = "568e73fa4e69f6b09bc5fabe542a8311faac79de";
         const endpointProfesores = "http://127.0.0.1:8000/api/profesores/";
@@ -102,6 +179,7 @@
         }
 
         // Crear o editar un profesor
+        // Crear o editar un profesor con notificación
         function crearOEditarProfesor() {
             const id = document.getElementById("profesor-id").value;
             const nombre = document.getElementById("nombre").value;
@@ -118,12 +196,14 @@
                 body: JSON.stringify({ nombre, especialidad, clases_impartidas: clases })
             })
             .then(() => {
+                alert(`¡Profesor ${id ? 'actualizado' : 'creado'} con éxito!`);
                 cargarProfesores(paginaActual);
                 document.getElementById("form-profesor").reset();
                 document.getElementById("profesor-id").value = "";
             })
             .catch(() => alert("Error al guardar el profesor."));
         }
+
 
         // Cargar los datos del profesor seleccionado en el formulario
         function cargarFormulario(id) {
@@ -170,22 +250,24 @@
     </script>
 </head>
 <body>
-    <h1>CRUD de Profesores</h1>
-    <form id="form-profesor" onsubmit="event.preventDefault(); crearOEditarProfesor();">
-        <input type="hidden" id="profesor-id">
-        <label>Nombre:</label>
-        <input type="text" id="nombre" placeholder="Nombre del profesor" required>
-        <label>Especialidad:</label>
-        <input type="text" id="especialidad" placeholder="Especialidad" required>
-        <label>Clases:</label>
-        <select id="clases-impartidas" multiple></select>
-        <button type="submit">Guardar</button>
-    </form>
-
-    <h2>Lista de Profesores</h2>
-    <ul id="lista-profesores"></ul>
-    <div id="paginacion"></div>
-
-    <br><a href="{% url 'menu' %}">ATRÁS</a>
+    <div class="container">
+        <h1>CRUD de Profesores</h1>
+        <form id="form-profesor" onsubmit="event.preventDefault(); crearOEditarProfesor();" class="form-container">
+            <input type="hidden" id="profesor-id">
+            <label>Nombre:</label>
+            <input type="text" id="nombre" placeholder="Nombre del profesor" required>
+            <label>Especialidad:</label>
+            <input type="text" id="especialidad" placeholder="Especialidad" required>
+            <label>Clases:</label>
+            <select id="clases-impartidas" multiple></select>
+            <button type="submit">Guardar</button>
+        </form>
+    
+        <h2>Lista de Profesores</h2>
+        <ul id="lista-profesores"></ul>
+        <div class="paginacion" id="paginacion"></div>
+    </div>
+    <a href="{% url 'menu' %}">ATRÁS</a>
+    
 </body>
 </html>
