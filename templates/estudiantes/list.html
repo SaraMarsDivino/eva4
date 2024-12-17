@@ -159,34 +159,26 @@
                 const listaEstudiantes = document.getElementById("lista-estudiantes");
                 listaEstudiantes.innerHTML = "";
 
-                // Iterar sobre los estudiantes
                 data.results.forEach(estudiante => {
-                    // Si las clases inscritas son IDs, realiza una consulta para obtener los nombres
-                    if (estudiante.clases_inscritas.length > 0 && typeof estudiante.clases_inscritas[0] === "number") {
-                        // Fetch para obtener detalles de las clases
-                        Promise.all(estudiante.clases_inscritas.map(claseId =>
-                            fetch(`${endpointClases}${claseId}/`, {
-                                headers: { "Authorization": `Token ${token}` }
-                            }).then(res => res.json())
-                        ))
-                        .then(clasesDetalles => {
-                            const clasesNombres = clasesDetalles.map(clase => clase.nombre).join(", ");
-                            agregarEstudianteEnLista(estudiante, clasesNombres);
-                        });
-                    } else {
-                        // Si las clases inscritas ya tienen nombres
-                        const clases = estudiante.clases_inscritas.length
-                            ? estudiante.clases_inscritas.map(clase => clase.nombre).join(", ")
-                            : "Sin inscribir";
-                        agregarEstudianteEnLista(estudiante, clases);
-                    }
+                    const clases = estudiante.clases_inscritas.length
+                        ? estudiante.clases_inscritas.map(clase => clase.nombre).join(", ")
+                        : "Sin inscribir";
+
+                    listaEstudiantes.innerHTML += `
+                        <li>
+                            <strong>${estudiante.nombre}</strong> - ${estudiante.correo} - Clases: ${clases}
+                            <button onclick="mostrarInscribir(${estudiante.id})">Inscribir</button>
+                            <button onclick="eliminarEstudiante(${estudiante.id})">Eliminar</button>
+                        </li>`;
                 });
 
-                // Mostrar paginación
                 mostrarPaginacion(data, cargarEstudiantes);
             })
-            .catch(() => mostrarMensaje("error", "Error al cargar los estudiantes."));
+            .catch(() => console.error("Error al cargar estudiantes."));
         }
+
+window.cargarEstudiantes = cargarEstudiantes; // Hacerla global
+
 
         // Función auxiliar para agregar estudiante a la lista
         function agregarEstudianteEnLista(estudiante, clases) {
@@ -201,18 +193,21 @@
 
 
         // Mostrar paginación
-        function mostrarPaginacion(data, funcion) {
+        function mostrarPaginacion(data) {
             const paginacionDiv = document.getElementById("paginacion");
             paginacionDiv.innerHTML = "";
 
             if (data.previous) {
-                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual - 1})">Anterior</button>`;
+                paginacionDiv.innerHTML += `
+                    <button onclick="cargarEstudiantes(${paginaActual - 1})">Anterior</button>`;
             }
 
             if (data.next) {
-                paginacionDiv.innerHTML += `<button onclick="funcion(${paginaActual + 1})">Siguiente</button>`;
+                paginacionDiv.innerHTML += `
+                    <button onclick="cargarEstudiantes(${paginaActual + 1})">Siguiente</button>`;
             }
         }
+
 
         // Mostrar formulario de inscripción
         function mostrarInscribir(estudianteId) {
