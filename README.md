@@ -3,26 +3,25 @@ Descripción del Proyecto Este proyecto es una aplicación web desarrollada en D
 Modelos
 Los modelos principales del proyecto son Estudiante, Profesor y Clase, cada uno con sus atributos:
 
-Estudiante
+	Estudiante
+	id (int): Identificador único.
+	nombre (str): Nombre del estudiante.
+	correo (str): Correo electrónico del estudiante.
+	clases_inscritas (ManyToMany): Clases en las que el estudiante está inscrito.
 
-id (int): Identificador único.
-nombre (str): Nombre del estudiante.
-correo (str): Correo electrónico del estudiante.
-clases_inscritas (ManyToMany): Clases en las que el estudiante está inscrito.
-Profesor
+	Profesor
+	id (int): Identificador único.
+	nombre (str): Nombre del profesor.
+	especialidad (str): Área de especialización del profesor.
+	clases_impartidas (ManyToMany): Clases que el profesor imparte.
 
-id (int): Identificador único.
-nombre (str): Nombre del profesor.
-especialidad (str): Área de especialización del profesor.
-clases_impartidas (ManyToMany): Clases que el profesor imparte.
-Clase
+	Clase
+	id (int): Identificador único.
+	nombre (str): Nombre de la clase.
+	horario (str): Horario de la clase.
+	descripcion (str): Descripción de la clase
 
-id (int): Identificador único.
-nombre (str): Nombre de la clase.
-horario (str): Horario de la clase.
-descripcion (str): Descripción de la clase
-
-. Ejemplos de uso de la API 🛠️
+-Ejemplos de uso de la API 🛠️
 A continuación, se describen ejemplos básicos de uso de la API REST para Estudiantes, Profesores y Clases.
 
 Autenticación
